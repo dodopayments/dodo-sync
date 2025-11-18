@@ -1,0 +1,7 @@
+README.md
+mongodb.conf
+node_modules/
+.env
+mongodb-data
+bun.lock
+scripts/*
