@@ -21,6 +21,15 @@ bun add -g dodo-sync
 ```
 
 Using it:
+We provide 2 options to run this. First is interactive mode in which all the information will be collected from you. And the second is CLI mode in which you have to pass all the information yourself.
+
+Interactive mode:
+```
+dodo-sync
+```
+To run in interactive mode, simply run dodo-sync in the terminal after installation. If no arguments are provided, it will automatically switch to interactive mode.
+
+CLI mode docs:
 ```
 dodo-sync -i [interval] -d [database] -u [database url] --scopes [scopes] --api-key [Dodo Payments API key] --env [Dodo Payments environment]
 ```
