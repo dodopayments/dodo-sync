@@ -20,13 +20,11 @@
   "license": "ISC",
   "author": "Dodo Payments",
   "type": "module",
-  "main": "dist/index.js",
   "bin": {
-    "dodo-sync": "src/bin/index"
+    "dodo-sync": "src/cli/index"
   },
   "scripts": {
-    "dev": "bun --watch src/index",
-    "db": "sh ./scripts/mongodb.sh"
+    "build": "tsdown"
   },
   "dependencies": {
     "@inquirer/checkbox": "^5.0.1",
@@ -38,10 +36,13 @@
   },
   "devDependencies": {
     "@types/bun": "^1.3.2",
-    "@types/yargs": "^17.0.35"
+    "@types/yargs": "^17.0.35",
+    "tsdown": "^0.16.5"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   },
-  "module": "src/index.ts"
+  "main": "./dist/index.ts",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts"
 }
