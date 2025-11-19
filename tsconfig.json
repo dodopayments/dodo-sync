@@ -6,12 +6,12 @@
     "target": "ES2022",
     "moduleResolution": "bundler",
     "declaration": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "allowJs": true
   },
   "include": [
-    "src"
+    "src",
+    "./node_modules/dodopayments/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
