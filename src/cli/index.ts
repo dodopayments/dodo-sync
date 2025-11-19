@@ -109,7 +109,14 @@ async function main() {
 
         try {
             const answers = await runInteractive();
-            return await startDodoSync(answers);
+            return await startDodoSync({
+                interval: answers.interval,
+                database: (answers.database as any),
+                databaseUri: answers.databaseUri,
+                scopes: answers.scopes,
+                apiKey: answers.apiKey,
+                env: answers.env,
+            });
         } catch (error) {
             console.error("Interactive mode failed:", error);
             process.exit(1);
@@ -143,7 +150,7 @@ async function startDodoSync({
     env,
 }: {
     interval: number;
-    database: string;
+    database: 'mongodb';
     databaseUri: string;
     scopes: string[];
     apiKey?: string;

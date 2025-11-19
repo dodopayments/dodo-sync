@@ -4,3 +4,5 @@ node_modules/
 mongodb-data
 bun.lock
 scripts/*
+test/
+dist/
