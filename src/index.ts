@@ -1,9 +1,5 @@
-// import DodoPayments, { type ClientOptions } from 'dodopayments';
-import DodoPayments from 'dodopayments';
-// import { type ClientOptions } from 'dodopayments/client';
-import { AddCustomerMongoDB, AddLicenceMongoDB, AddPaymentMongoDB, AddSubscriptionMongoDB, ConnectMongoDB } from './database-integrations/mongoose';
-
-type ClientOptions = ConstructorParameters<typeof DodoPayments>[0];
+import DodoPayments, { type ClientOptions } from 'dodopayments';
+import { AddCustomerMongoDB, AddLicenceMongoDB, AddPaymentMongoDB, AddSubscriptionMongoDB, ConnectMongoDB } from './database-integrations/mongodb';
 
 type scopes = ('licences' | 'payments' | 'customers' | 'subscriptions')[];
 class DodoSync {
