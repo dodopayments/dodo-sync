@@ -7,4 +7,10 @@ export default defineConfig({
     shims: true,
     skipNodeModulesBundle: true,
     clean: true,
+    minify: true,
+    outDir: './dist',
+    // dts: {
+    //     resolve: ['dodopayments/client'],
+    //     resolver: 'tsc',
+    // },
 });

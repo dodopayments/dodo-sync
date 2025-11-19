@@ -1,7 +1,6 @@
 {
   "name": "dodo-sync",
   "version": "0.1.0",
-  "private": true,
   "description": "Sync Dodo Payments data with your database",
   "keywords": [
     "dodopayments",
@@ -21,17 +20,20 @@
   "author": "Dodo Payments",
   "type": "module",
   "bin": {
-    "dodo-sync": "src/cli/index"
+    "dodo-sync": "dist/cli.js"
   },
   "scripts": {
-    "build": "tsdown"
+    "build:code": "tsdown",
+    "db": "sh ./scripts/mongodb.sh",
+    "build:cli": "bun build src/cli/index --outfile dist/cli.js --target node --minify",
+    "build": "bun run build:code && bun run build:cli"
   },
   "dependencies": {
     "@inquirer/checkbox": "^5.0.1",
     "@inquirer/input": "^5.0.1",
     "@inquirer/select": "^5.0.1",
-    "dodopayments": "^2.4.6",
-    "mongoose": "^8.19.3",
+    "dodopayments": "^2.6.0",
+    "mongoose": "^8.20.0",
     "yargs": "^18.0.0"
   },
   "devDependencies": {
@@ -42,7 +44,19 @@
   "peerDependencies": {
     "typescript": "^5.9.3"
   },
-  "main": "./dist/index.ts",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  }
 }
