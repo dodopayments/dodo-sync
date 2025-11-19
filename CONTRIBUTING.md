@@ -11,7 +11,7 @@ If you're trying to add a database, you should follow the below steps:
     - AddLicence\<DatabaseName\> (example: AddLicenceMongoDB). It should accept a parameter named `licenceData` with the type `DodoPayments.LicenseKeys.LicenseKey` and this licence data should then be added to the database.
     - AddCustomer\<DatabaseName\> (example: AddCustomerMongoDB). It should accept a parameter named `customerData` with the type `DodoPayments.Customers.Customer` and this customer data should then be added to the database.
 3. Open the [src/index.ts](https://github.com/dodopayments/dodo-sync/blob/main/src/index.ts) file and import the above created functions.
-4. Inside the same [src/index.ts](https://github.com/dodopayments/dodo-sync/blob/main/src/index.ts) file and below the init() function, you will see 4 private functions `addLicence`, `addSubscription`, `addPayment` and `addCustomer`. These functions handle the code writing to the database. Now, inside each of these functions, to add your database, do:
+4. Inside the same [src/index.ts](https://github.com/dodopayments/dodo-sync/blob/main/src/index.ts) file below the init() function, you will see 4 private functions `addLicence`, `addSubscription`, `addPayment` and `addCustomer`. These functions handle the code writing to the database. Now, inside each of these functions, to add your database, do:
 ```ts
 if (this.database === '<your-database-name>'){
     Add<scope><db>(data);
