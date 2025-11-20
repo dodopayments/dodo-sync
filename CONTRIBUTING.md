@@ -1,5 +1,36 @@
-# Contributing to Dodo Sync
-We highly value contributions. Here's a guide on how you can contribute.
+# Contributing
+We welcome contributors to this repository. We will give out swags to those who provide many valuable contributions.
+
+## Basic information
+Folder structure:
+```
+src/
+    index.ts ⬅ Main entrypoint File
+    database-integrations/
+        [database] ⬅ database name (eg, mongodb, postgres, etc)
+            index.ts ⬅ Entrypoint for the integration
+            [...other files] ⬅ Put the other files containing the code, etc that don't belong into the entrypoint src/database-integrations/[database]/index.ts file
+```
+
+Example folder structure:
+```
+src/
+    index.ts
+    database-integrations/
+        mongodb/
+            index.ts
+```
+Keep arguments optional. Do not force the user to enter arguments. Instead, add input if arguments are missing.
+
+Prevent using compilers/runtimes other than NodeJS/Bun. This is to make sure it's easy to contribute for all future contributors.
+
+Please add comments where appropriate to make it easier for further contributors to contribute.
+
+## High Level Flow:
+1. User runs the command with or without arguments.
+2. If user doesn't use arguments, ask them for input.
+3. Fetch the required data from Dodo Payments.
+4. Sync the data to the user's database.
 
 ## Contributing to an addition of a database
 If you're trying to add a database, you should follow the below steps:  
@@ -35,3 +66,11 @@ Still stuck?
 Check out the [MongoDB integration](https://github.com/dodopayments/dodo-sync/blob/main/src/database-integrations/mongodb/index.ts) file for example.
 
 If you have queries, you can ask about them in the #contributors channel of our [Discord server](https://discord.gg/S6kuPSW5Fm).
+
+## Libraries:  
+Currently used libraries:  
+- [yargs](https://github.com/yargs/yargs) - for parsing command line arguments in nodejs.
+- [inquirer](https://github.com/SBoudrias/Inquirer.js) - for taking user input.
+- [dodopayments](https://github.com/dodopayments/dodopayments-typescript) - Dodo Payments SDK.
+
+Please prevent using additional libraries if not majorly required. This is to ensure this project doesn't get overcluttered with less used dependencies.

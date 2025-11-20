@@ -1,119 +1,141 @@
 # Dodo Payments Sync Engine
 
-Sync your Dodo Payments data with your own database.
+<p align="left">
+  <a href="https://www.npmjs.com/package/dodo-sync">
+    <img src="https://img.shields.io/npm/v/dodo-sync?color=cb3837&label=npm&logo=npm" alt="npm version" />
+  </a>
+  <a href="https://discord.gg/bYqAp4ayYh">
+    <img src="https://img.shields.io/discord/1305511580854779984?label=Join%20Discord&logo=discord" alt="Join Discord" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-GPLv3-blue.svg" alt="License: GPLv3" />
+  </a>
+</p>
 
-## Database support
-We currently only support MongoDB. We are constantly working on expanding this support. If you're able to contribute a database, please make a PR (Pull Request).
+Seamlessly sync your Dodo Payments data with your own database.
+
+## Database Support
+
+We currently support **MongoDB**.
+
+We are actively working on expanding support for:
+- **Databases**: Postgres, Clickhouse, Snowflake, and others.
+- **Pipelines**: ETL pipelines, Realtime sync.
+
+If you'd like to contribute a new database integration, please submit a Pull Request (PR).
 
 ## Usage
-We provide 2 usage options
-1. CLI
-2. Code
 
-### CLI usage
-Installation:
-```
+You can use `dodo-sync` via the **CLI** or programmatically in your **Code**.
+
+### 1. CLI Usage
+
+#### Installation
+
+```bash
 npm install -g dodo-sync
-```
-OR
-```
+# OR
 bun add -g dodo-sync
 ```
 
-Using it:
-We provide 2 options to run this. First is interactive mode in which all the information will be collected from you. And the second is CLI mode in which you have to pass all the information yourself.
+#### Running the CLI
 
-Interactive mode:
-```
+**Interactive Mode:**
+Simply run the command without arguments to start the interactive setup wizard.
+```bash
 dodo-sync
 ```
-To run in interactive mode, simply run dodo-sync in the terminal after installation. If no arguments are provided, it will automatically switch to interactive mode.
 
-CLI mode docs:
-```
-dodo-sync -i [interval] -d [database] -u [database url] --scopes [scopes] --api-key [Dodo Payments API key] --env [Dodo Payments environment]
-```
-
-Example:
-```
-dodo-sync -i 600 -d mongodb -u mongodb://mymongodb.url --scopes "licences,payments,customers,subscriptions" --api-key YOUR_DODO_PAYMENTS_API_KEY --env test_mode
+**Manual Mode:**
+Pass arguments directly to skip the wizard.
+```bash
+dodo-sync -i [interval] -d [database] -u [database_uri] --scopes [scopes] --api-key [api_key] --env [environment]
 ```
 
-Arguments:  
-Command | Shorthand | Name | Type | Usage |
-| ----- | --------- | ---- | ---- | ----- |
---interval | -i | Interval | number | Interval (in seconds).
---database | -d | Database | "mongodb" | Name of the database used.
---database-uri | -u | Database URI | string | The URI to connect the database.
---scopes | | Database URI | licences, payments, customers, subscriptions | The things you want to migrate. Separated by a comma with no space in between. Example: "payments,subscriptions".
---api-key | |  API Key | string | Your Dodo Payments API Key.
---env |  | Environment | "live_mode" or "test_mode" | The Dodo Payments you're targeting.
-
-
-### Code usage
-Installation:
+**Example:**
+```bash
+dodo-sync -i 600 -d mongodb -u mongodb://mymongodb.url --scopes "licences,payments,customers,subscriptions" --api-key YOUR_API_KEY --env test_mode
 ```
+
+#### Arguments
+
+| Argument | Shorthand | Description | Type | Required | Example |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `--interval` | `-i` | Sync interval in seconds. | `number` | No | `600` |
+| `--database` | `-d` | Database type. | `"mongodb"` | Yes | `mongodb` |
+| `--database-uri` | `-u` | Connection URI for the database. | `string` | Yes | `mongodb://...` |
+| `--scopes` | | Data entities to sync (comma-separated). | `string` | Yes | `payments,customers` |
+| `--api-key` | | Your Dodo Payments API Key. | `string` | Yes | `dp_live_...` |
+| `--env` | | Environment target. | `"live_mode"` \| `"test_mode"` | Yes | `test_mode` |
+
+---
+
+### 2. Code Usage
+
+#### Installation
+
+```bash
 npm install dodo-sync
-```
-OR
-```
+# OR
 bun add dodo-sync
 ```
 
-Example usage (automatic predefined interval based sync):
+#### Example: Automatic Sync (Interval-based)
+
 ```ts
 import { DodoSync } from 'dodo-sync';
 
 const syncDodoPayments = new DodoSync({
-    interval: 60
+    interval: 60, // Sync every 60 seconds
     database: 'mongodb',
-    databaseURI: '<Your Database URI>',
+    databaseURI: process.env.MONGODB_URI, // e.g., 'mongodb://localhost:27017'
     scopes: ['licences', 'payments', 'customers', 'subscriptions'],
     dodoPaymentsOptions: {
-        bearerToken: '<Your Dodo Payments API Key>',
-        environment: 'test_mode' // or 'live_mode' for production
+        bearerToken: process.env.DODO_PAYMENTS_API_KEY,
+        environment: 'test_mode' // or 'live_mode'
     }
 });
 
-// This will run the intialization (example, connecting to database)
+// Initialize connection
 await syncDodoPayments.init();
 
-// This will start syncing after every few intervals
+// Start the sync loop
 syncDodoPayments.start();
 ```
 
-Example usage (manual sync):
+#### Example: Manual Sync
+
 ```ts
 import { DodoSync } from 'dodo-sync';
 
 const syncDodoPayments = new DodoSync({
     database: 'mongodb',
-    databaseURI: '<Your Database URI>',
+    databaseURI: process.env.MONGODB_URI,
     scopes: ['licences', 'payments', 'customers', 'subscriptions'],
     dodoPaymentsOptions: {
-        bearerToken: '<Your Dodo Payments API Key>',
-        environment: 'test_mode' // or 'live_mode' for production
+        bearerToken: process.env.DODO_PAYMENTS_API_KEY,
+        environment: 'test_mode'
     }
 });
 
-// This will run the intialization (example, connecting to database)
+// Initialize connection
 await syncDodoPayments.init();
 
-// This will start syncing after every few intervals
-syncDodoPayments.start();
-
-// Run the below line anytime you want to conduct the migration
-syncDodoPayments.run();
+// Trigger a single sync operation
+await syncDodoPayments.run();
 ```
 
-DodoSync class constructor options:
-| Name | Value | Usage | Required |
-| ---- | ----- | ------| -------- |
-| database | "mongodb" | Name of the database to be used. | ✅
-| databaseURI  | string | Provide the URL to the database. | ✅
-| scopes | ["licences", "payments", "customers", "subscriptions"] | An array of the things you want to sync with your database. | ✅
-dodoPaymentsOptions | See types from [here](https://github.com/dodopayments/dodopayments-typescript/blob/31455c8dc30a7fe1ee073854f3db00272e552039/src/client.ts#L344) | The options will directly go into the Dodo Payments initializer. These parameters is required and accepts crucial Dodo Payments connection info like the API key and environment. | ✅ | 
-| interval | number | Provide the time (in seconds). This is optional. If you don't include this, you will have to manually sync using .run() function. | ❌
+#### Constructor Options
 
-## Important info
-A database named `dodopayments_sync` will automatically be created in your database server. This will contain all your sync data. This cannot be changed.
+| Option | Type | Description | Required |
+| :--- | :--- | :--- | :--- |
+| `database` | `"mongodb"` | Name of the database to use. | ✅ |
+| `databaseURI` | `string` | Connection string for the database. | ✅ |
+| `scopes` | `string[]` | Array of entities to sync (e.g., `["payments", "customers"]`). | ✅ |
+| `dodoPaymentsOptions` | `object` | Dodo Payments SDK options (API key, environment). See [types](https://github.com/dodopayments/dodopayments-typescript/blob/main/src/client.ts). | ✅ |
+| `interval` | `number` | Time in seconds between automatic syncs. Required for `.start()`, optional for `.run()`. | ❌ |
+
+## Important Info
+
+> [!IMPORTANT]
+> A database named `dodopayments_sync` will be automatically created on your database server. All sync data will be stored there. This database name is currently fixed and cannot be changed.
