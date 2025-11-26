@@ -1,10 +1,10 @@
 import DodoPayments, { type ClientOptions } from 'dodopayments';
 import { AddCustomerMongoDB, AddLicenceMongoDB, AddPaymentMongoDB, AddSubscriptionMongoDB, ConnectMongoDB } from './database-integrations/mongodb';
-
+import { AddCustomerPostgres, AddLicencePostgres , AddPaymentPostgres , AddSubscriptionPostgres , ConnectPostgres } from './database-integrations/postgres';
 type scopes = ('licences' | 'payments' | 'customers' | 'subscriptions')[];
 class DodoSync {
     private interval: number;
-    private database: 'mongodb';
+    private database: 'mongodb' | 'postgres';
     private databaseURI: string;
     private timer?: NodeJS.Timeout;
     private DodoPaymentsClient: DodoPayments;
@@ -20,7 +20,7 @@ class DodoSync {
         dodoPaymentsOptions
     }: {
         interval?: number,
-        database: 'mongodb',
+        database: 'mongodb' | 'postgres',
         databaseURI: string,
         scopes: scopes,
         dodoPaymentsOptions: ClientOptions
@@ -48,6 +48,10 @@ class DodoSync {
         if (this.database === 'mongodb') {
             await ConnectMongoDB(this.databaseURI);
             this.isInit = true;
+        }
+        else if (this.database === 'postgres') {
+            await ConnectPostgres(this.databaseURI);
+            this.isInit = true;
         } else {
             throw new Error(`Database ${this.database} not supported yet.`);
         }
@@ -63,12 +67,18 @@ class DodoSync {
         if (this.database === 'mongodb') {
             AddLicenceMongoDB(licenceData);
         }
+        else if (this.database === 'postgres') {
+            AddLicencePostgres(licenceData);
+        }
     }
 
     // This will add payment to the database
     private addSubscription(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
         if (this.database === 'mongodb') {
             AddSubscriptionMongoDB(subscriptionData);
+        }
+        else if (this.database === 'postgres') {
+            AddSubscriptionPostgres(subscriptionData);
         }
     }
 
@@ -77,12 +87,18 @@ class DodoSync {
         if (this.database === 'mongodb') {
             AddPaymentMongoDB(paymentData);
         }
+        else if (this.database === 'postgres') {
+            AddPaymentPostgres(paymentData);
+        }
     }
 
     // This will add customer to the database
     private addCustomer(customerData: DodoPayments.Customers.Customer) {
         if (this.database === 'mongodb') {
             AddCustomerMongoDB(customerData);
+        }
+        else if (this.database === 'postgres') {
+            AddCustomerPostgres(customerData);
         }
     }
 

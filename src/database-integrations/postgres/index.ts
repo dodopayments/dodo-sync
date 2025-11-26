@@ -9,8 +9,10 @@ const ConnectPostgres = async (uri : string) => {
             connectionString : uri
         });
         await pgClient.connect();
-    } catch (error){
         await initTables();
+    } catch (error){
+        console.error('Error connecting to PostgreSQL:', error);
+        throw error;
     }
 }
 
@@ -23,19 +25,23 @@ const initTables = async () => {
         );`,
         `CREATE TABLE IF NOT EXISTS Payment (
             id TEXT PRIMARY KEY,
-            data JSONB NOT NULL,
+            data JSONB NOT NULL
         );`,
         `CREATE TABLE IF NOT EXISTS License (
             id TEXT PRIMARY KEY,
-            data JSONB NOT NULL,
+            data JSONB NOT NULL
         );`,
         `CREATE TABLE IF NOT EXISTS Customer (
             id TEXT PRIMARY KEY,
-            data JSONB NOT NULL,
+            data JSONB NOT NULL
         );`
     ];
     for (const query of tableQueries) {
-        await pgClient.query(query);
+        try{
+            await pgClient.query(query);
+        }catch(error){
+            throw error;
+        }
     }
 }
 
@@ -77,7 +83,7 @@ async function AddPaymentPostgres(paymentData: DodoPayments.Payments.PaymentList
     try{
         await pgClient.query(query,values)
     }catch(error){
-        console.error(`Error syncing subscription ${paymentData.subscription_id}:`, error);
+        console.error(`Error syncing subscription ${paymentData.payment_id}:`, error);
         throw error;
     }
 }
@@ -87,7 +93,6 @@ async function AddLicencePostgres(licenceData: DodoPayments.LicenseKeys.LicenseK
         INSERT INTO License (id, data)
         VALUES ($1, $2)
         ON CONFLICT (id) DO UPDATE SET
-        id = EXCLUDED.id,
         data = EXCLUDED.data;
     `;
     const values = [
@@ -97,7 +102,7 @@ async function AddLicencePostgres(licenceData: DodoPayments.LicenseKeys.LicenseK
     try{
         await pgClient.query(query,values)
     }catch(error){
-        console.error(`Error syncing subscription ${licenceData.subscription_id}:`, error);
+        console.error(`Error syncing license ${licenceData.subscription_id}:`, error);
         throw error;
     }
 }
@@ -117,9 +122,9 @@ async function AddCustomerPostgres(customerData: DodoPayments.Customers.Customer
     try{
         await pgClient.query(query,values)
     }catch(error){
-        console.error(`Error syncing subscription ${customerData.customer_id}:`, error);
+        console.error(`Error syncing Customer ${customerData.customer_id}:`, error);
         throw error;
     }
 }
 
-export { ConnectMongoDB, AddSubscriptionMongoDB, AddPaymentMongoDB, AddLicenceMongoDB, AddCustomerMongoDB };
+export { ConnectPostgres, AddSubscriptionPostgres, AddPaymentPostgres, AddLicencePostgres, AddCustomerPostgres };
