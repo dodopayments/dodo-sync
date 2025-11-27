@@ -50,7 +50,6 @@ async function AddSubscriptionPostgres(subscriptionData: DodoPayments.Subscripti
         INSERT INTO Subscription (id, data)
         VALUES ($1, $2)
         ON CONFLICT (id) DO UPDATE SET
-        id = EXCLUDED.id,
         data = EXCLUDED.data;
     `;
 
@@ -72,7 +71,6 @@ async function AddPaymentPostgres(paymentData: DodoPayments.Payments.PaymentList
         INSERT INTO Payment (id, data)
         VALUES ($1, $2)
         ON CONFLICT (id) DO UPDATE SET
-        id = EXCLUDED.id,
         data = EXCLUDED.data;
     `;
 
@@ -112,7 +110,6 @@ async function AddCustomerPostgres(customerData: DodoPayments.Customers.Customer
         INSERT INTO Customer (id, data)
         VALUES ($1, $2)
         ON CONFLICT (id) DO UPDATE SET
-        id = EXCLUDED.id,
         data = EXCLUDED.data;
     `;
     const values = [
