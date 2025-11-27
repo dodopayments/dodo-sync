@@ -94,13 +94,13 @@ async function AddLicencePostgres(licenceData: DodoPayments.LicenseKeys.LicenseK
         data = EXCLUDED.data;
     `;
     const values = [
-        licenceData.subscription_id,
+        licenceData.id,
         JSON.stringify(licenceData)
     ]
     try{
         await pgClient.query(query,values)
     }catch(error){
-        console.error(`Error syncing license ${licenceData.subscription_id}:`, error);
+        console.error(`Error syncing license ${licenceData.id}:`, error);
         throw error;
     }
 }
