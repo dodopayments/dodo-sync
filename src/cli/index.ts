@@ -7,7 +7,7 @@ import select from "@inquirer/select";
 import checkbox from "@inquirer/checkbox";
 import { DodoSync } from "../index";
 
-const supportedDatabases = ["mongodb"];
+const supportedDatabases = ["mongodb", "postgres"];
 const supportedScopes = ["licences", "payments", "customers", "subscriptions"] as const;
 
 type SupportedScope = (typeof supportedScopes)[number];
