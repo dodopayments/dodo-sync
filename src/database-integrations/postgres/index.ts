@@ -1,16 +1,16 @@
 import { Client } from 'pg'
 import DodoPayments from 'dodopayments';
 
-let pgClient : Client
+let pgClient: Client
 
-const ConnectPostgres = async (uri : string) => {
+const ConnectPostgres = async (uri: string) => {
     try {
         pgClient = new Client({
-            connectionString : uri
+            connectionString: uri
         });
         await pgClient.connect();
         await initTables();
-    } catch (error){
+    } catch (error) {
         console.error('Error connecting to PostgreSQL:', error);
         throw error;
     }
@@ -19,27 +19,27 @@ const ConnectPostgres = async (uri : string) => {
 const initTables = async () => {
     // I have used JSONB to store the data
     const tableQueries = [
-        `CREATE TABLE IF NOT EXISTS Subscription (
+        `CREATE TABLE IF NOT EXISTS Subscriptions (
             id TEXT PRIMARY KEY,
             data JSONB NOT NULL
         );`,
-        `CREATE TABLE IF NOT EXISTS Payment (
+        `CREATE TABLE IF NOT EXISTS Payments (
             id TEXT PRIMARY KEY,
             data JSONB NOT NULL
         );`,
-        `CREATE TABLE IF NOT EXISTS License (
+        `CREATE TABLE IF NOT EXISTS Licenses (
             id TEXT PRIMARY KEY,
             data JSONB NOT NULL
         );`,
-        `CREATE TABLE IF NOT EXISTS Customer (
+        `CREATE TABLE IF NOT EXISTS Customers (
             id TEXT PRIMARY KEY,
             data JSONB NOT NULL
         );`
     ];
     for (const query of tableQueries) {
-        try{
+        try {
             await pgClient.query(query);
-        }catch(error){
+        } catch (error) {
             throw error;
         }
     }
@@ -47,7 +47,7 @@ const initTables = async () => {
 
 async function AddSubscriptionPostgres(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
     const query = `
-        INSERT INTO Subscription (id, data)
+        INSERT INTO Subscriptions (id, data)
         VALUES ($1, $2)
         ON CONFLICT (id) DO UPDATE SET
         data = EXCLUDED.data;
@@ -66,9 +66,9 @@ async function AddSubscriptionPostgres(subscriptionData: DodoPayments.Subscripti
     }
 }
 
-async function AddPaymentPostgres(paymentData: DodoPayments.Payments.PaymentListResponse){
+async function AddPaymentPostgres(paymentData: DodoPayments.Payments.PaymentListResponse) {
     const query = `
-        INSERT INTO Payment (id, data)
+        INSERT INTO Payments (id, data)
         VALUES ($1, $2)
         ON CONFLICT (id) DO UPDATE SET
         data = EXCLUDED.data;
@@ -78,17 +78,17 @@ async function AddPaymentPostgres(paymentData: DodoPayments.Payments.PaymentList
         paymentData.payment_id,
         JSON.stringify(paymentData)
     ]
-    try{
-        await pgClient.query(query,values)
-    }catch(error){
+    try {
+        await pgClient.query(query, values)
+    } catch (error) {
         console.error(`Error syncing subscription ${paymentData.payment_id}:`, error);
         throw error;
     }
 }
 
-async function AddLicencePostgres(licenceData: DodoPayments.LicenseKeys.LicenseKey){
+async function AddLicencePostgres(licenceData: DodoPayments.LicenseKeys.LicenseKey) {
     const query = `
-        INSERT INTO License (id, data)
+        INSERT INTO Licenses (id, data)
         VALUES ($1, $2)
         ON CONFLICT (id) DO UPDATE SET
         data = EXCLUDED.data;
@@ -97,17 +97,17 @@ async function AddLicencePostgres(licenceData: DodoPayments.LicenseKeys.LicenseK
         licenceData.id,
         JSON.stringify(licenceData)
     ]
-    try{
-        await pgClient.query(query,values)
-    }catch(error){
+    try {
+        await pgClient.query(query, values)
+    } catch (error) {
         console.error(`Error syncing license ${licenceData.id}:`, error);
         throw error;
     }
 }
 
-async function AddCustomerPostgres(customerData: DodoPayments.Customers.Customer){
+async function AddCustomerPostgres(customerData: DodoPayments.Customers.Customer) {
     const query = `
-        INSERT INTO Customer (id, data)
+        INSERT INTO Customers (id, data)
         VALUES ($1, $2)
         ON CONFLICT (id) DO UPDATE SET
         data = EXCLUDED.data;
@@ -116,9 +116,9 @@ async function AddCustomerPostgres(customerData: DodoPayments.Customers.Customer
         customerData.customer_id,
         JSON.stringify(customerData)
     ]
-    try{
-        await pgClient.query(query,values)
-    }catch(error){
+    try {
+        await pgClient.query(query, values)
+    } catch (error) {
         console.error(`Error syncing Customer ${customerData.customer_id}:`, error);
         throw error;
     }

@@ -1,6 +1,6 @@
 import DodoPayments, { type ClientOptions } from 'dodopayments';
 import { AddCustomerMongoDB, AddLicenceMongoDB, AddPaymentMongoDB, AddSubscriptionMongoDB, ConnectMongoDB } from './database-integrations/mongodb';
-import { AddCustomerPostgres, AddLicencePostgres , AddPaymentPostgres , AddSubscriptionPostgres , ConnectPostgres } from './database-integrations/postgres';
+import { AddCustomerPostgres, AddLicencePostgres, AddPaymentPostgres, AddSubscriptionPostgres, ConnectPostgres } from './database-integrations/postgres';
 type scopes = ('licences' | 'payments' | 'customers' | 'subscriptions')[];
 class DodoSync {
     private interval: number;
