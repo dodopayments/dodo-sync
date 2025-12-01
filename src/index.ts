@@ -10,6 +10,8 @@ class DodoSync {
     private DodoPaymentsClient: DodoPayments;
     private scopes: scopes = [];
     private isInit: boolean = false;
+    private rateLimit: number;
+    private nextRequestTime: number = 0;
 
     constructor({
         // Will default to 0 seconds which means it won't run automatically at intervals
@@ -17,13 +19,16 @@ class DodoSync {
         database,
         databaseURI,
         scopes,
-        dodoPaymentsOptions
+        dodoPaymentsOptions,
+        // Default rate limit is 10 requests per second
+        rateLimit = 10
     }: {
         interval?: number,
         database: 'mongodb' | 'postgres',
         databaseURI: string,
         scopes: scopes,
-        dodoPaymentsOptions: ClientOptions
+        dodoPaymentsOptions: ClientOptions,
+        rateLimit?: number
     }) {
         if (!database) {
             throw new Error("Missing required argument: database");
@@ -39,7 +44,22 @@ class DodoSync {
         this.database = database;
         this.databaseURI = databaseURI;
         this.scopes = scopes;
+        this.scopes = scopes;
+        this.rateLimit = rateLimit;
         this.DodoPaymentsClient = new DodoPayments(dodoPaymentsOptions);
+    }
+
+    private async throttle() {
+        // Disable rate limiting if rateLimit is greater than or equal to 100 since it won't make any difference at this point
+        if (this.rateLimit >= 100) return;
+        const now = Date.now();
+        const allocatedTime = Math.max(now, this.nextRequestTime);
+        this.nextRequestTime = allocatedTime + (1000 / this.rateLimit);
+
+        const delay = allocatedTime - now;
+        if (delay > 0) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
     }
 
 
@@ -111,6 +131,7 @@ class DodoSync {
     private async fetchLicences(
         { page = 0 }: { page?: number } = {}
     ) {
+        await this.throttle();
         const licences = await this.DodoPaymentsClient.licenseKeys.list({
             page_number: page,
             page_size: 100
@@ -121,7 +142,7 @@ class DodoSync {
         }
 
         if (licences.hasNextPage()) {
-            this.fetchLicences({
+            await this.fetchLicences({
                 page: page + 1
             });
         }
@@ -131,6 +152,7 @@ class DodoSync {
     private async fetchSubscriptions(
         { page = 0 }: { page?: number } = {}
     ) {
+        await this.throttle();
         const subscriptions = await this.DodoPaymentsClient.subscriptions.list({
             page_number: page,
             page_size: 100
@@ -142,7 +164,7 @@ class DodoSync {
         }
 
         if (subscriptions.hasNextPage()) {
-            this.fetchSubscriptions({
+            await this.fetchSubscriptions({
                 page: page + 1
             });
         }
@@ -152,6 +174,7 @@ class DodoSync {
     private async fetchPayments(
         { page = 0 }: { page?: number } = {}
     ) {
+        await this.throttle();
         const payments = await this.DodoPaymentsClient.payments.list({
             page_number: page,
             page_size: 100
@@ -162,7 +185,7 @@ class DodoSync {
         }
 
         if (payments.hasNextPage()) {
-            this.fetchPayments({
+            await this.fetchPayments({
                 page: page + 1
             });
         }
@@ -172,6 +195,7 @@ class DodoSync {
     private async fetchCustomers(
         { page = 0 }: { page?: number } = {}
     ) {
+        await this.throttle();
         const customers = await this.DodoPaymentsClient.customers.list({
             page_number: page,
             page_size: 100
@@ -182,7 +206,7 @@ class DodoSync {
         }
 
         if (customers.hasNextPage()) {
-            this.fetchCustomers({
+            await this.fetchCustomers({
                 page: page + 1
             });
         }
@@ -196,19 +220,19 @@ class DodoSync {
     // I have exposed it (not made it private) so that it can be called manually if needed
     async run() {
         if (this.scopes.includes('licences')) {
-            this.fetchLicences();
+            await this.fetchLicences();
         }
 
         if (this.scopes.includes('payments')) {
-            this.fetchPayments();
+            await this.fetchPayments();
         }
 
         if (this.scopes.includes('customers')) {
-            this.fetchCustomers();
+            await this.fetchCustomers();
         }
 
         if (this.scopes.includes('subscriptions')) {
-            this.fetchSubscriptions();
+            await this.fetchSubscriptions();
         }
     }
 

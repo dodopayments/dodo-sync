@@ -67,6 +67,7 @@ dodo-sync -i 600 -d mongodb -u mongodb://mymongodb.url --scopes "licences,paymen
 | `--scopes` | | Data entities to sync (comma-separated). | `string` | Yes | `payments,customers` |
 | `--api-key` | | Your Dodo Payments API Key. | `string` | Yes | `dp_live_...` |
 | `--env` | | Environment target. | `"live_mode"` \| `"test_mode"` | Yes | `test_mode` |
+| `--rate-limit` | `--rl` | Rate limit in requests per second. | `number` | No | `10` |
 
 ---
 
@@ -134,6 +135,7 @@ await syncDodoPayments.run();
 | `scopes` | `string[]` | Array of entities to sync (e.g., `["payments", "customers"]`). | ✅ |
 | `dodoPaymentsOptions` | `object` | Dodo Payments SDK options (API key, environment). See [types](https://github.com/dodopayments/dodopayments-typescript/blob/main/src/client.ts). | ✅ |
 | `interval` | `number` | Time in seconds between automatic syncs. Required for `.start()`, optional for `.run()`. | ❌ |
+| `rateLimit` | `number` | Number of requests per second. | ❌ |
 
 ## Important Info
 
