@@ -19,6 +19,7 @@ async function runInteractive(): Promise<{
     apiKey?: string;
     env?: "live_mode" | "test_mode" | string;
     scopes: string[];
+    rateLimit: number;
 }> {
     const rawInterval = await input({
         message: "Interval in seconds (e.g. 60):",
@@ -56,6 +57,15 @@ async function runInteractive(): Promise<{
         ],
     });
 
+    const rateLimit = await input({
+        message: "Rate limit (requests per second):",
+        default: "10",
+        validate: (v: string) => {
+            const n = Number(v);
+            return Number.isInteger(n) && n > 0 ? true : "Please enter a positive integer.";
+        },
+    });
+
     return {
         interval: Number(rawInterval),
         database,
@@ -63,6 +73,7 @@ async function runInteractive(): Promise<{
         scopes,
         apiKey: apiKey || undefined,
         env,
+        rateLimit: Number(rateLimit),
     };
 }
 
@@ -100,6 +111,11 @@ async function main() {
             choices: ["test_mode", "live_mode"],
             description: "Environment ('test_mode' or 'live_mode')",
         })
+        .option("rate-limit", {
+            alias: "rl",
+            type: "number",
+            description: "Rate limit in requests per second",
+        })
         .strict()
         .help();
 
@@ -116,6 +132,7 @@ async function main() {
                 scopes: answers.scopes,
                 apiKey: answers.apiKey,
                 env: answers.env,
+                rateLimit: answers.rateLimit,
             });
         } catch (error) {
             console.error("Interactive mode failed:", error);
@@ -124,7 +141,7 @@ async function main() {
     }
 
     const argv = parser.parseSync();
-    const { interval, database, databaseUri, scopes, apiKey, env } = argv as any;
+    const { interval, database, databaseUri, scopes, apiKey, env, rateLimit } = argv as any;
 
     if (!interval || !database || !databaseUri || !scopes || !apiKey || !env) {
         console.error("Missing required arguments. Use --help for usage.");
@@ -138,6 +155,7 @@ async function main() {
         scopes: scopes.split(",").map((x: string) => x.trim()),
         apiKey,
         env,
+        rateLimit: rateLimit ? Number(rateLimit) : undefined,
     });
 }
 
@@ -148,6 +166,7 @@ async function startDodoSync({
     scopes,
     apiKey,
     env,
+    rateLimit,
 }: {
     interval: number;
     database: 'mongodb';
@@ -155,6 +174,7 @@ async function startDodoSync({
     scopes: string[];
     apiKey?: string;
     env?: string;
+    rateLimit?: number;
 }) {
     if (!supportedDatabases.includes(database)) {
         console.error("Unsupported database type. Only 'mongodb' is allowed.");
@@ -176,6 +196,7 @@ async function startDodoSync({
     console.log(`  Database: ${database}`);
     console.log(`  Scopes:   ${scopes.join(", ")}`);
     console.log(`  Env:      ${env}`);
+    console.log(`  Rate Limit: ${rateLimit || 10} req/s`);
     console.log(`  URI:      ************\n`);
 
     const dodoSync = new DodoSync({
@@ -183,6 +204,7 @@ async function startDodoSync({
         database,
         databaseURI: databaseUri,
         scopes: scopes as any,
+        rateLimit,
         dodoPaymentsOptions: {
             bearerToken: apiKey,
             environment: env as "live_mode" | "test_mode",
