@@ -16,10 +16,10 @@ Seamlessly sync your Dodo Payments data with your own database.
 
 ## Database Support
 
-We currently support **MongoDB**.
+We currently support **MongoDB** and **PostgreSQL**.
 
 We are actively working on expanding support for:
-- **Databases**: Postgres, Clickhouse, Snowflake, and others.
+- **Databases**: Clickhouse, Snowflake, and others.
 - **Pipelines**: ETL pipelines, Realtime sync.
 
 If you'd like to contribute a new database integration, please submit a Pull Request (PR).
@@ -52,9 +52,13 @@ Pass arguments directly to skip the wizard.
 dodo-sync -i [interval] -d [database] -u [database_uri] --scopes [scopes] --api-key [api_key] --env [environment]
 ```
 
-**Example:**
+**Examples:**
 ```bash
+# MongoDB
 dodo-sync -i 600 -d mongodb -u mongodb://mymongodb.url --scopes "licences,payments,customers,subscriptions" --api-key YOUR_API_KEY --env test_mode
+
+# PostgreSQL
+dodo-sync -i 600 -d postgres -u postgresql://user:password@localhost:5432/mydb --scopes "licences,payments,customers,subscriptions" --api-key YOUR_API_KEY --env test_mode
 ```
 
 #### Arguments
@@ -62,7 +66,7 @@ dodo-sync -i 600 -d mongodb -u mongodb://mymongodb.url --scopes "licences,paymen
 | Argument | Shorthand | Description | Type | Required | Example |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `--interval` | `-i` | Sync interval in seconds. | `number` | No | `600` |
-| `--database` | `-d` | Database type. | `"mongodb"` | Yes | `mongodb` |
+| `--database` | `-d` | Database type. | `"mongodb"` \| `"postgres"` | Yes | `mongodb` |
 | `--database-uri` | `-u` | Connection URI for the database. | `string` | Yes | `mongodb://...` |
 | `--scopes` | | Data entities to sync (comma-separated). | `string` | Yes | `payments,customers` |
 | `--api-key` | | Your Dodo Payments API Key. | `string` | Yes | `dp_live_...` |
@@ -126,11 +130,31 @@ await syncDodoPayments.init();
 await syncDodoPayments.run();
 ```
 
+#### Example: PostgreSQL
+
+```ts
+import { DodoSync } from 'dodo-sync';
+
+const syncDodoPayments = new DodoSync({
+    interval: 60,
+    database: 'postgres',
+    databaseURI: process.env.POSTGRES_URI, // e.g., 'postgresql://user:password@localhost:5432/mydb'
+    scopes: ['licences', 'payments', 'customers', 'subscriptions'],
+    dodoPaymentsOptions: {
+        bearerToken: process.env.DODO_PAYMENTS_API_KEY,
+        environment: 'test_mode'
+    }
+});
+
+await syncDodoPayments.init();
+syncDodoPayments.start();
+```
+
 #### Constructor Options
 
 | Option | Type | Description | Required |
 | :--- | :--- | :--- | :--- |
-| `database` | `"mongodb"` | Name of the database to use. | ✅ |
+| `database` | `"mongodb"` \| `"postgres"` | Name of the database to use. | ✅ |
 | `databaseURI` | `string` | Connection string for the database. | ✅ |
 | `scopes` | `string[]` | Array of entities to sync (e.g., `["payments", "customers"]`). | ✅ |
 | `dodoPaymentsOptions` | `object` | Dodo Payments SDK options (API key, environment). See [types](https://github.com/dodopayments/dodopayments-typescript/blob/main/src/client.ts). | ✅ |
@@ -140,4 +164,6 @@ await syncDodoPayments.run();
 ## Important Info
 
 > [!IMPORTANT]
-> A database named `dodopayments_sync` will be automatically created on your database server. All sync data will be stored there. This database name is currently fixed and cannot be changed.
+> **MongoDB**: A database named `dodopayments_sync` will be automatically created on your database server. All sync data will be stored there. This database name is currently fixed and cannot be changed.
+>
+> **PostgreSQL**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created in the database specified in your connection URI. Data is stored as JSONB.
