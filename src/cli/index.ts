@@ -7,7 +7,7 @@ import select from "@inquirer/select";
 import checkbox from "@inquirer/checkbox";
 import { DodoSync } from "../index";
 
-const supportedDatabases = ["mongodb"];
+const supportedDatabases = ["mongodb", "postgres"];
 const supportedScopes = ["licences", "payments", "customers", "subscriptions"] as const;
 
 type SupportedScope = (typeof supportedScopes)[number];
@@ -169,7 +169,7 @@ async function startDodoSync({
     rateLimit,
 }: {
     interval: number;
-    database: 'mongodb';
+    database: 'mongodb' | 'postgres';
     databaseUri: string;
     scopes: string[];
     apiKey?: string;
@@ -177,7 +177,7 @@ async function startDodoSync({
     rateLimit?: number;
 }) {
     if (!supportedDatabases.includes(database)) {
-        console.error("Unsupported database type. Only 'mongodb' is allowed.");
+        console.error(`Unsupported database type. Allowed: ${supportedDatabases.join(", ")}`);
         process.exit(1);
     }
 
