@@ -1,10 +1,11 @@
 import DodoPayments, { type ClientOptions } from 'dodopayments';
 import { AddCustomerMongoDB, AddLicenceMongoDB, AddPaymentMongoDB, AddSubscriptionMongoDB, ConnectMongoDB } from './database-integrations/mongodb';
 import { AddCustomerPostgres, AddLicencePostgres, AddPaymentPostgres, AddSubscriptionPostgres, ConnectPostgres } from './database-integrations/postgres';
+import { AddCustomerMySQL, AddLicenceMySQL , AddPaymentMySQL ,AddSubscriptionMySQL , ConnectMySQL } from './database-integrations/mysql';
 type scopes = ('licences' | 'payments' | 'customers' | 'subscriptions')[];
 class DodoSync {
     private interval: number;
-    private database: 'mongodb' | 'postgres';
+    private database: 'mongodb' | 'postgres' | 'mysql';
     private databaseURI: string;
     private timer?: NodeJS.Timeout;
     private DodoPaymentsClient: DodoPayments;
@@ -24,7 +25,7 @@ class DodoSync {
         rateLimit = 10
     }: {
         interval?: number,
-        database: 'mongodb' | 'postgres',
+        database: 'mongodb' | 'postgres' | 'mysql',
         databaseURI: string,
         scopes: scopes,
         dodoPaymentsOptions: ClientOptions,
@@ -72,6 +73,10 @@ class DodoSync {
         else if (this.database === 'postgres') {
             await ConnectPostgres(this.databaseURI);
             this.isInit = true;
+        }
+        else if (this.database === 'mysql') {
+            await ConnectMySQL(this.databaseURI);
+            this.isInit = true;
         } else {
             throw new Error(`Database ${this.database} not supported yet.`);
         }
@@ -90,6 +95,9 @@ class DodoSync {
         else if (this.database === 'postgres') {
             AddLicencePostgres(licenceData);
         }
+        else if (this.database === 'mysql') {
+            AddLicenceMySQL(licenceData);
+        }
     }
 
     // This will add payment to the database
@@ -99,6 +107,9 @@ class DodoSync {
         }
         else if (this.database === 'postgres') {
             AddSubscriptionPostgres(subscriptionData);
+        }
+        else if (this.database === 'mysql') {
+            AddSubscriptionMySQL(subscriptionData);
         }
     }
 
@@ -110,6 +121,9 @@ class DodoSync {
         else if (this.database === 'postgres') {
             AddPaymentPostgres(paymentData);
         }
+        else if (this.database === 'mysql') {
+            AddPaymentMySQL(paymentData);
+        }
     }
 
     // This will add customer to the database
@@ -119,6 +133,9 @@ class DodoSync {
         }
         else if (this.database === 'postgres') {
             AddCustomerPostgres(customerData);
+        }
+        else if (this.database === 'mysql') {
+            AddCustomerMySQL(customerData);
         }
     }
 
