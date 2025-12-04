@@ -2,11 +2,7 @@ import DodoPayments, { type ClientOptions } from 'dodopayments';
 import { AddCustomerMongoDB, AddLicenceMongoDB, AddPaymentMongoDB, AddSubscriptionMongoDB, ConnectMongoDB } from './database-integrations/mongodb';
 import { AddCustomerPostgres, AddLicencePostgres, AddPaymentPostgres, AddSubscriptionPostgres, ConnectPostgres } from './database-integrations/postgres';
 import { AddCustomerClickHouse, AddLicenceClickHouse, AddPaymentClickHouse, AddSubscriptionClickHouse, ConnectClickHouse } from './database-integrations/clickhouse';
-type scopes = ('licences' | 'payments' | 'customers' | 'subscriptions')[];
-class DodoSync {
-    private interval: number;
-    private database: 'mongodb' | 'postgres' | 'clickhouse';
-import { AddCustomerMySQL, AddLicenceMySQL , AddPaymentMySQL ,AddSubscriptionMySQL , ConnectMySQL } from './database-integrations/mysql';
+import { AddCustomerMySQL, AddLicenceMySQL, AddPaymentMySQL, AddSubscriptionMySQL, ConnectMySQL } from './database-integrations/mysql';
 type scopes = ('licences' | 'payments' | 'customers' | 'subscriptions')[];
 class DodoSync {
     private interval: number;
@@ -86,7 +82,8 @@ class DodoSync {
         else if (this.database === 'mysql') {
             await ConnectMySQL(this.databaseURI);
             this.isInit = true;
-        } else {
+        }
+        else {
             throw new Error(`Database ${this.database} not supported yet.`);
         }
     }
@@ -112,7 +109,7 @@ class DodoSync {
         }
     }
 
-    // This will add payment to the database
+    // This will add subscription to the database
     private addSubscription(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
         if (this.database === 'mongodb') {
             AddSubscriptionMongoDB(subscriptionData);
