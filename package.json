@@ -34,6 +34,7 @@
     "@inquirer/select": "^5.0.1",
     "dodopayments": "^2.6.1",
     "mongoose": "^8.20.1",
+    "mysql2": "^3.15.3",
     "pg": "^8.16.3",
     "yargs": "^18.0.0"
   },
