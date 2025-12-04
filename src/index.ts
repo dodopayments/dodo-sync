@@ -1,10 +1,11 @@
 import DodoPayments, { type ClientOptions } from 'dodopayments';
 import { AddCustomerMongoDB, AddLicenceMongoDB, AddPaymentMongoDB, AddSubscriptionMongoDB, ConnectMongoDB } from './database-integrations/mongodb';
 import { AddCustomerPostgres, AddLicencePostgres, AddPaymentPostgres, AddSubscriptionPostgres, ConnectPostgres } from './database-integrations/postgres';
+import { AddCustomerClickHouse, AddLicenceClickHouse, AddPaymentClickHouse, AddSubscriptionClickHouse, ConnectClickHouse } from './database-integrations/clickhouse';
 type scopes = ('licences' | 'payments' | 'customers' | 'subscriptions')[];
 class DodoSync {
     private interval: number;
-    private database: 'mongodb' | 'postgres';
+    private database: 'mongodb' | 'postgres' | 'clickhouse';
     private databaseURI: string;
     private timer?: NodeJS.Timeout;
     private DodoPaymentsClient: DodoPayments;
@@ -24,7 +25,7 @@ class DodoSync {
         rateLimit = 10
     }: {
         interval?: number,
-        database: 'mongodb' | 'postgres',
+        database: 'mongodb' | 'postgres' | 'clickhouse',
         databaseURI: string,
         scopes: scopes,
         dodoPaymentsOptions: ClientOptions,
@@ -72,7 +73,12 @@ class DodoSync {
         else if (this.database === 'postgres') {
             await ConnectPostgres(this.databaseURI);
             this.isInit = true;
-        } else {
+        }
+        else if (this.database === 'clickhouse') {
+            await ConnectClickHouse(this.databaseURI);
+            this.isInit = true;
+        }
+        else {
             throw new Error(`Database ${this.database} not supported yet.`);
         }
     }
@@ -90,6 +96,9 @@ class DodoSync {
         else if (this.database === 'postgres') {
             AddLicencePostgres(licenceData);
         }
+        else if (this.database === 'clickhouse') {
+            AddLicenceClickHouse(licenceData);
+        }
     }
 
     // This will add payment to the database
@@ -99,6 +108,9 @@ class DodoSync {
         }
         else if (this.database === 'postgres') {
             AddSubscriptionPostgres(subscriptionData);
+        }
+        else if (this.database === 'clickhouse') {
+            AddSubscriptionClickHouse(subscriptionData);
         }
     }
 
@@ -110,6 +122,9 @@ class DodoSync {
         else if (this.database === 'postgres') {
             AddPaymentPostgres(paymentData);
         }
+        else if (this.database === 'clickhouse') {
+            AddPaymentClickHouse(paymentData);
+        }
     }
 
     // This will add customer to the database
@@ -119,6 +134,9 @@ class DodoSync {
         }
         else if (this.database === 'postgres') {
             AddCustomerPostgres(customerData);
+        }
+        else if (this.database === 'clickhouse') {
+            AddCustomerClickHouse(customerData);
         }
     }
 
