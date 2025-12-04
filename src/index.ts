@@ -6,6 +6,11 @@ type scopes = ('licences' | 'payments' | 'customers' | 'subscriptions')[];
 class DodoSync {
     private interval: number;
     private database: 'mongodb' | 'postgres' | 'clickhouse';
+import { AddCustomerMySQL, AddLicenceMySQL , AddPaymentMySQL ,AddSubscriptionMySQL , ConnectMySQL } from './database-integrations/mysql';
+type scopes = ('licences' | 'payments' | 'customers' | 'subscriptions')[];
+class DodoSync {
+    private interval: number;
+    private database: 'mongodb' | 'postgres' | 'mysql' | 'clickhouse';
     private databaseURI: string;
     private timer?: NodeJS.Timeout;
     private DodoPaymentsClient: DodoPayments;
@@ -25,7 +30,7 @@ class DodoSync {
         rateLimit = 10
     }: {
         interval?: number,
-        database: 'mongodb' | 'postgres' | 'clickhouse',
+        database: 'mongodb' | 'postgres' | 'mysql' | 'clickhouse',
         databaseURI: string,
         scopes: scopes,
         dodoPaymentsOptions: ClientOptions,
@@ -78,7 +83,10 @@ class DodoSync {
             await ConnectClickHouse(this.databaseURI);
             this.isInit = true;
         }
-        else {
+        else if (this.database === 'mysql') {
+            await ConnectMySQL(this.databaseURI);
+            this.isInit = true;
+        } else {
             throw new Error(`Database ${this.database} not supported yet.`);
         }
     }
@@ -99,6 +107,9 @@ class DodoSync {
         else if (this.database === 'clickhouse') {
             AddLicenceClickHouse(licenceData);
         }
+        else if (this.database === 'mysql') {
+            AddLicenceMySQL(licenceData);
+        }
     }
 
     // This will add payment to the database
@@ -111,6 +122,9 @@ class DodoSync {
         }
         else if (this.database === 'clickhouse') {
             AddSubscriptionClickHouse(subscriptionData);
+        }
+        else if (this.database === 'mysql') {
+            AddSubscriptionMySQL(subscriptionData);
         }
     }
 
@@ -125,6 +139,9 @@ class DodoSync {
         else if (this.database === 'clickhouse') {
             AddPaymentClickHouse(paymentData);
         }
+        else if (this.database === 'mysql') {
+            AddPaymentMySQL(paymentData);
+        }
     }
 
     // This will add customer to the database
@@ -137,6 +154,9 @@ class DodoSync {
         }
         else if (this.database === 'clickhouse') {
             AddCustomerClickHouse(customerData);
+        }
+        else if (this.database === 'mysql') {
+            AddCustomerMySQL(customerData);
         }
     }
 

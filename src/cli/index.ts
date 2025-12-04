@@ -7,7 +7,7 @@ import select from "@inquirer/select";
 import checkbox from "@inquirer/checkbox";
 import { DodoSync } from "../index";
 
-const supportedDatabases = ["mongodb", "postgres", "clickhouse"];
+const supportedDatabases = ["mongodb", "postgres", "mysql", "clickhouse"];
 const supportedScopes = ["licences", "payments", "customers", "subscriptions"] as const;
 
 type SupportedScope = (typeof supportedScopes)[number];
@@ -169,7 +169,7 @@ async function startDodoSync({
     rateLimit,
 }: {
     interval: number;
-    database: 'mongodb' | 'postgres' | 'clickhouse';
+    database: 'mongodb' | 'postgres' | 'mysql' | 'clickhouse';
     databaseUri: string;
     scopes: string[];
     apiKey?: string;
