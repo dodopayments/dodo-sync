@@ -23,33 +23,37 @@ const ConnectClickHouse = async (uri: string) => {
 // Initializes all required tables in ClickHouse
 
 const initTables = async () => {
-    const tableQueries = [
+const tableQueries = [
         `CREATE TABLE IF NOT EXISTS Subscriptions (
             id String,
             data String,
-            updated_at DateTime DEFAULT now()
-        ) ENGINE = ReplacingMergeTree(updated_at)
+            updated_at DateTime DEFAULT now(),
+            sign Int8
+        ) ENGINE = CollapsingMergeTree(sign)
         ORDER BY id;`,
         
         `CREATE TABLE IF NOT EXISTS Payments (
             id String,
             data String,
-            updated_at DateTime DEFAULT now()
-        ) ENGINE = ReplacingMergeTree(updated_at)
+            updated_at DateTime DEFAULT now(),
+            sign Int8
+        ) ENGINE = CollapsingMergeTree(sign)
         ORDER BY id;`,
         
         `CREATE TABLE IF NOT EXISTS Licenses (
             id String,
             data String,
-            updated_at DateTime DEFAULT now()
-        ) ENGINE = ReplacingMergeTree(updated_at)
+            updated_at DateTime DEFAULT now(),
+            sign Int8
+        ) ENGINE = CollapsingMergeTree(sign)
         ORDER BY id;`,
         
         `CREATE TABLE IF NOT EXISTS Customers (
             id String,
             data String,
-            updated_at DateTime DEFAULT now()
-        ) ENGINE = ReplacingMergeTree(updated_at)
+            updated_at DateTime DEFAULT now(),
+            sign Int8
+        ) ENGINE = CollapsingMergeTree(sign)
         ORDER BY id;`
     ];
 
@@ -69,11 +73,25 @@ const initTables = async () => {
  */
 async function AddSubscriptionClickHouse(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
     try {
+        const id = subscriptionData.subscription_id;
+        const dataStr = JSON.stringify(subscriptionData);
+        
         await clickhouseClient.insert({
             table: 'Subscriptions',
             values: [{
-                id: subscriptionData.subscription_id,
-                data: JSON.stringify(subscriptionData)
+                id: id,
+                data: dataStr,
+                sign: -1
+            }],
+            format: 'JSONEachRow'
+        });
+        
+        await clickhouseClient.insert({
+            table: 'Subscriptions',
+            values: [{
+                id: id,
+                data: dataStr,
+                sign: 1
             }],
             format: 'JSONEachRow'
         });
