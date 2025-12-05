@@ -29,6 +29,7 @@
     "build": "bun run build:code && bun run build:cli"
   },
   "dependencies": {
+    "@clickhouse/client": "^1.14.0",
     "@inquirer/checkbox": "^5.0.1",
     "@inquirer/input": "^5.0.1",
     "@inquirer/select": "^5.0.1",

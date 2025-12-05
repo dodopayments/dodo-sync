@@ -1,11 +1,12 @@
 import DodoPayments, { type ClientOptions } from 'dodopayments';
 import { AddCustomerMongoDB, AddLicenceMongoDB, AddPaymentMongoDB, AddSubscriptionMongoDB, ConnectMongoDB } from './database-integrations/mongodb';
 import { AddCustomerPostgres, AddLicencePostgres, AddPaymentPostgres, AddSubscriptionPostgres, ConnectPostgres } from './database-integrations/postgres';
-import { AddCustomerMySQL, AddLicenceMySQL , AddPaymentMySQL ,AddSubscriptionMySQL , ConnectMySQL } from './database-integrations/mysql';
+import { AddCustomerClickHouse, AddLicenceClickHouse, AddPaymentClickHouse, AddSubscriptionClickHouse, ConnectClickHouse } from './database-integrations/clickhouse';
+import { AddCustomerMySQL, AddLicenceMySQL, AddPaymentMySQL, AddSubscriptionMySQL, ConnectMySQL } from './database-integrations/mysql';
 type scopes = ('licences' | 'payments' | 'customers' | 'subscriptions')[];
 class DodoSync {
     private interval: number;
-    private database: 'mongodb' | 'postgres' | 'mysql';
+    private database: 'mongodb' | 'postgres' | 'mysql' | 'clickhouse';
     private databaseURI: string;
     private timer?: NodeJS.Timeout;
     private DodoPaymentsClient: DodoPayments;
@@ -25,7 +26,7 @@ class DodoSync {
         rateLimit = 10
     }: {
         interval?: number,
-        database: 'mongodb' | 'postgres' | 'mysql',
+        database: 'mongodb' | 'postgres' | 'mysql' | 'clickhouse',
         databaseURI: string,
         scopes: scopes,
         dodoPaymentsOptions: ClientOptions,
@@ -74,10 +75,15 @@ class DodoSync {
             await ConnectPostgres(this.databaseURI);
             this.isInit = true;
         }
+        else if (this.database === 'clickhouse') {
+            await ConnectClickHouse(this.databaseURI);
+            this.isInit = true;
+        }
         else if (this.database === 'mysql') {
             await ConnectMySQL(this.databaseURI);
             this.isInit = true;
-        } else {
+        }
+        else {
             throw new Error(`Database ${this.database} not supported yet.`);
         }
     }
@@ -95,18 +101,24 @@ class DodoSync {
         else if (this.database === 'postgres') {
             AddLicencePostgres(licenceData);
         }
+        else if (this.database === 'clickhouse') {
+            AddLicenceClickHouse(licenceData);
+        }
         else if (this.database === 'mysql') {
             AddLicenceMySQL(licenceData);
         }
     }
 
-    // This will add payment to the database
+    // This will add subscription to the database
     private addSubscription(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
         if (this.database === 'mongodb') {
             AddSubscriptionMongoDB(subscriptionData);
         }
         else if (this.database === 'postgres') {
             AddSubscriptionPostgres(subscriptionData);
+        }
+        else if (this.database === 'clickhouse') {
+            AddSubscriptionClickHouse(subscriptionData);
         }
         else if (this.database === 'mysql') {
             AddSubscriptionMySQL(subscriptionData);
@@ -121,6 +133,9 @@ class DodoSync {
         else if (this.database === 'postgres') {
             AddPaymentPostgres(paymentData);
         }
+        else if (this.database === 'clickhouse') {
+            AddPaymentClickHouse(paymentData);
+        }
         else if (this.database === 'mysql') {
             AddPaymentMySQL(paymentData);
         }
@@ -133,6 +148,9 @@ class DodoSync {
         }
         else if (this.database === 'postgres') {
             AddCustomerPostgres(customerData);
+        }
+        else if (this.database === 'clickhouse') {
+            AddCustomerClickHouse(customerData);
         }
         else if (this.database === 'mysql') {
             AddCustomerMySQL(customerData);

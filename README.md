@@ -16,10 +16,10 @@ Seamlessly sync your Dodo Payments data with your own database.
 
 ## Database Support
 
-We currently support **MongoDB** and **PostgreSQL**.
+We currently support **MongoDB**, **PostgreSQL** and **ClickHouse**.
 
 We are actively working on expanding support for:
-- **Databases**: Clickhouse, Snowflake, and others.
+- **Databases**: Snowflake, and others.
 - **Pipelines**: ETL pipelines, Realtime sync.
 
 If you'd like to contribute a new database integration, please submit a Pull Request (PR).
@@ -167,3 +167,5 @@ syncDodoPayments.start();
 > **MongoDB**: A database named `dodopayments_sync` will be automatically created on your database server. All sync data will be stored there. This database name is currently fixed and cannot be changed.
 >
 > **PostgreSQL**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created in the database specified in your connection URI. Data is stored as JSONB.
+>
+> **Clickhouse**: When querying ClickHouse tables, you must use the FINAL keyword to ensure you receive deduplicated results. Without FINAL, queries may return duplicate rows until ClickHouse performs background merges.
