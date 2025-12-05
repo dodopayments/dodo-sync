@@ -107,11 +107,25 @@ async function AddSubscriptionClickHouse(subscriptionData: DodoPayments.Subscrip
  */
 async function AddPaymentClickHouse(paymentData: DodoPayments.Payments.PaymentListResponse) {
     try {
+        const id = paymentData.payment_id;
+        const dataStr = JSON.stringify(paymentData);
+        
         await clickhouseClient.insert({
             table: 'Payments',
             values: [{
-                id: paymentData.payment_id,
-                data: JSON.stringify(paymentData)
+                id: id,
+                data: dataStr,
+                sign: -1
+            }],
+            format: 'JSONEachRow'
+        });
+        
+        await clickhouseClient.insert({
+            table: 'Payments',
+            values: [{
+                id: id,
+                data: dataStr,
+                sign: 1
             }],
             format: 'JSONEachRow'
         });
@@ -127,11 +141,25 @@ async function AddPaymentClickHouse(paymentData: DodoPayments.Payments.PaymentLi
  */
 async function AddLicenceClickHouse(licenceData: DodoPayments.LicenseKeys.LicenseKey) {
     try {
+        const id = licenceData.id;
+        const dataStr = JSON.stringify(licenceData);
+        
         await clickhouseClient.insert({
             table: 'Licenses',
             values: [{
-                id: licenceData.id,
-                data: JSON.stringify(licenceData)
+                id: id,
+                data: dataStr,
+                sign: -1
+            }],
+            format: 'JSONEachRow'
+        });
+        
+        await clickhouseClient.insert({
+            table: 'Licenses',
+            values: [{
+                id: id,
+                data: dataStr,
+                sign: 1
             }],
             format: 'JSONEachRow'
         });
@@ -147,11 +175,25 @@ async function AddLicenceClickHouse(licenceData: DodoPayments.LicenseKeys.Licens
  */
 async function AddCustomerClickHouse(customerData: DodoPayments.Customers.Customer) {
     try {
+        const id = customerData.customer_id;
+        const dataStr = JSON.stringify(customerData);
+        
         await clickhouseClient.insert({
             table: 'Customers',
             values: [{
-                id: customerData.customer_id,
-                data: JSON.stringify(customerData)
+                id: id,
+                data: dataStr,
+                sign: -1
+            }],
+            format: 'JSONEachRow'
+        });
+        
+        await clickhouseClient.insert({
+            table: 'Customers',
+            values: [{
+                id: id,
+                data: dataStr,
+                sign: 1
             }],
             format: 'JSONEachRow'
         });
