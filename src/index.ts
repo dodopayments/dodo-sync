@@ -164,7 +164,7 @@ class DodoSync {
 
        const savePromises = licences.items.map(licence => this.addLicence(licence));
 
-       await Promise.all(savePromises);
+       await Promise.allSettled(savePromises);
 
         if (licences.hasNextPage()) {
             await this.fetchLicences({
@@ -186,7 +186,7 @@ class DodoSync {
 
         const savePromises = subscriptions.items.map(subscription => this.addSubscription(subscription));
 
-        await Promise.all(savePromises);
+        await Promise.allSettled(savePromises);
 
         if (subscriptions.hasNextPage()) {
             await this.fetchSubscriptions({
@@ -207,7 +207,7 @@ class DodoSync {
 
         const savePromises = payments.items.map(payment => this.addPayment(payment));
 
-        await Promise.all(savePromises);
+        await Promise.allSettled(savePromises);
 
         if (payments.hasNextPage()) {
             await this.fetchPayments({
@@ -228,7 +228,7 @@ class DodoSync {
 
         const savePromises = customers.items.map(customer => this.addCustomer(customer));
 
-        await Promise.all(savePromises);
+        await Promise.allSettled(savePromises);
 
         if (customers.hasNextPage()) {
             await this.fetchCustomers({
