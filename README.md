@@ -16,10 +16,10 @@ Seamlessly sync your Dodo Payments data with your own database.
 
 ## Database Support
 
-We currently support **MongoDB** and **PostgreSQL**.
+We currently support **MongoDB**, **PostgreSQL** and **ClickHouse**.
 
 We are actively working on expanding support for:
-- **Databases**: Clickhouse, Snowflake, and others.
+- **Databases**: Snowflake, and others.
 - **Pipelines**: ETL pipelines, Realtime sync.
 
 If you'd like to contribute a new database integration, please submit a Pull Request (PR).
