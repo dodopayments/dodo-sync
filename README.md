@@ -167,3 +167,5 @@ syncDodoPayments.start();
 > **MongoDB**: A database named `dodopayments_sync` will be automatically created on your database server. All sync data will be stored there. This database name is currently fixed and cannot be changed.
 >
 > **PostgreSQL**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created in the database specified in your connection URI. Data is stored as JSONB.
+>
+> **Clickhouse**: When querying ClickHouse tables, you must use the FINAL keyword to ensure you receive deduplicated results. Without FINAL, queries may return duplicate rows until ClickHouse performs background merges.
