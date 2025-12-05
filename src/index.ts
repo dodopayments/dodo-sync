@@ -90,53 +90,61 @@ class DodoSync {
     // This will add licence to the database
     private addLicence(licenceData: DodoPayments.LicenseKeys.LicenseKey) {
         if (this.database === 'mongodb') {
-            AddLicenceMongoDB(licenceData);
+            return AddLicenceMongoDB(licenceData);
         }
         else if (this.database === 'postgres') {
-            AddLicencePostgres(licenceData);
+            return AddLicencePostgres(licenceData);
         }
         else if (this.database === 'mysql') {
-            AddLicenceMySQL(licenceData);
+            return AddLicenceMySQL(licenceData);
         }
+        // Return a resolved promise if no DB matches
+        return Promise.resolve();
     }
 
     // This will add payment to the database
     private addSubscription(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
         if (this.database === 'mongodb') {
-            AddSubscriptionMongoDB(subscriptionData);
+            return AddSubscriptionMongoDB(subscriptionData);
         }
         else if (this.database === 'postgres') {
-            AddSubscriptionPostgres(subscriptionData);
+            return AddSubscriptionPostgres(subscriptionData);
         }
         else if (this.database === 'mysql') {
-            AddSubscriptionMySQL(subscriptionData);
+            return AddSubscriptionMySQL(subscriptionData);
         }
+        // Return a resolved promise if no DB matches
+        return Promise.resolve();
     }
 
     // This will add payment to the database
     private addPayment(paymentData: DodoPayments.Payments.PaymentListResponse) {
         if (this.database === 'mongodb') {
-            AddPaymentMongoDB(paymentData);
+            return AddPaymentMongoDB(paymentData);
         }
         else if (this.database === 'postgres') {
-            AddPaymentPostgres(paymentData);
+            return AddPaymentPostgres(paymentData);
         }
         else if (this.database === 'mysql') {
-            AddPaymentMySQL(paymentData);
+            return AddPaymentMySQL(paymentData);
         }
+        // Return a resolved promise if no DB matches
+        return Promise.resolve();
     }
 
     // This will add customer to the database
     private addCustomer(customerData: DodoPayments.Customers.Customer) {
         if (this.database === 'mongodb') {
-            AddCustomerMongoDB(customerData);
+            return AddCustomerMongoDB(customerData);
         }
         else if (this.database === 'postgres') {
-            AddCustomerPostgres(customerData);
+            return AddCustomerPostgres(customerData);
         }
         else if (this.database === 'mysql') {
-            AddCustomerMySQL(customerData);
+            return AddCustomerMySQL(customerData);
         }
+        // Return a resolved promise if no DB matches
+        return Promise.resolve();
     }
 
 
@@ -154,9 +162,9 @@ class DodoSync {
             page_size: 100
         });
 
-        for (const licence of licences.items) {
-            this.addLicence(licence);
-        }
+       const savePromises = licences.items.map(licence => this.addLicence(licence));
+
+       await Promise.all(savePromises);
 
         if (licences.hasNextPage()) {
             await this.fetchLicences({
@@ -176,9 +184,9 @@ class DodoSync {
         });
 
 
-        for (const subscription of subscriptions.items) {
-            this.addSubscription(subscription);
-        }
+        const savePromises = subscriptions.items.map(subscription => this.addSubscription(subscription));
+
+        await Promise.all(savePromises);
 
         if (subscriptions.hasNextPage()) {
             await this.fetchSubscriptions({
@@ -197,9 +205,9 @@ class DodoSync {
             page_size: 100
         });
 
-        for (const payment of payments.items) {
-            this.addPayment(payment);
-        }
+        const savePromises = payments.items.map(payment => this.addPayment(payment));
+
+        await Promise.all(savePromises);
 
         if (payments.hasNextPage()) {
             await this.fetchPayments({
@@ -218,9 +226,9 @@ class DodoSync {
             page_size: 100
         });
 
-        for (const customer of customers.items) {
-            this.addCustomer(customer);
-        }
+        const savePromises = customers.items.map(customer => this.addCustomer(customer));
+
+        await Promise.all(savePromises);
 
         if (customers.hasNextPage()) {
             await this.fetchCustomers({
