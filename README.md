@@ -16,10 +16,10 @@ Seamlessly sync your Dodo Payments data with your own database.
 
 ## Database Support
 
-We currently support **MongoDB**, **PostgreSQL** and **ClickHouse**.
+We currently support **MongoDB**, **PostgreSQL**, **MySQL**, and **ClickHouse**.
 
 We are actively working on expanding support for:
-- **Databases**: Snowflake, and others.
+- **Databases**: Snowflake and others.
 - **Pipelines**: ETL pipelines, Realtime sync.
 
 If you'd like to contribute a new database integration, please submit a Pull Request (PR).
@@ -59,6 +59,12 @@ dodo-sync -i 600 -d mongodb -u mongodb://mymongodb.url --scopes "licences,paymen
 
 # PostgreSQL
 dodo-sync -i 600 -d postgres -u postgresql://user:password@localhost:5432/mydb --scopes "licences,payments,customers,subscriptions" --api-key YOUR_API_KEY --env test_mode
+
+# MySQL
+dodo-sync -i 600 -d mysql -u mysql://user:password@localhost:3306/mydb --scopes "licences,payments,customers,subscriptions" --api-key YOUR_API_KEY --env test_mode
+
+# ClickHouse
+dodo-sync -i 600 -d clickhouse -u http://localhost:8123 --scopes "licences,payments,customers,subscriptions" --api-key YOUR_API_KEY --env test_mode
 ```
 
 #### Arguments
@@ -66,7 +72,7 @@ dodo-sync -i 600 -d postgres -u postgresql://user:password@localhost:5432/mydb -
 | Argument | Shorthand | Description | Type | Required | Example |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `--interval` | `-i` | Sync interval in seconds. | `number` | No | `600` |
-| `--database` | `-d` | Database type. | `"mongodb"` \| `"postgres"` | Yes | `mongodb` |
+| `--database` | `-d` | Database type. | `"mongodb"` \| `"postgres"` \| `"mysql"` \| `"clickhouse"` | Yes | `mongodb` |
 | `--database-uri` | `-u` | Connection URI for the database. | `string` | Yes | `mongodb://...` |
 | `--scopes` | | Data entities to sync (comma-separated). | `string` | Yes | `payments,customers` |
 | `--api-key` | | Your Dodo Payments API Key. | `string` | Yes | `dp_live_...` |
@@ -150,11 +156,51 @@ await syncDodoPayments.init();
 syncDodoPayments.start();
 ```
 
+#### Example: MySQL
+
+```ts
+import { DodoSync } from 'dodo-sync';
+
+const syncDodoPayments = new DodoSync({
+    interval: 60,
+    database: 'mysql',
+    databaseURI: process.env.MYSQL_URI, // e.g., 'mysql://user:password@localhost:3306/mydb'
+    scopes: ['licences', 'payments', 'customers', 'subscriptions'],
+    dodoPaymentsOptions: {
+        bearerToken: process.env.DODO_PAYMENTS_API_KEY,
+        environment: 'test_mode'
+    }
+});
+
+await syncDodoPayments.init();
+syncDodoPayments.start();
+```
+
+#### Example: ClickHouse
+
+```ts
+import { DodoSync } from 'dodo-sync';
+
+const syncDodoPayments = new DodoSync({
+    interval: 60,
+    database: 'clickhouse',
+    databaseURI: process.env.CLICKHOUSE_URI, // e.g., 'http://localhost:8123'
+    scopes: ['licences', 'payments', 'customers', 'subscriptions'],
+    dodoPaymentsOptions: {
+        bearerToken: process.env.DODO_PAYMENTS_API_KEY,
+        environment: 'test_mode'
+    }
+});
+
+await syncDodoPayments.init();
+syncDodoPayments.start();
+```
+
 #### Constructor Options
 
 | Option | Type | Description | Required |
 | :--- | :--- | :--- | :--- |
-| `database` | `"mongodb"` \| `"postgres"` | Name of the database to use. | ✅ |
+| `database` | `"mongodb"` \| `"postgres"` \| `"mysql"` \| `"clickhouse"` | Name of the database to use. | ✅ |
 | `databaseURI` | `string` | Connection string for the database. | ✅ |
 | `scopes` | `string[]` | Array of entities to sync (e.g., `["payments", "customers"]`). | ✅ |
 | `dodoPaymentsOptions` | `object` | Dodo Payments SDK options (API key, environment). See [types](https://github.com/dodopayments/dodopayments-typescript/blob/main/src/client.ts). | ✅ |
@@ -168,4 +214,6 @@ syncDodoPayments.start();
 >
 > **PostgreSQL**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created in the database specified in your connection URI. Data is stored as JSONB.
 >
-> **Clickhouse**: When querying ClickHouse tables, you must use the FINAL keyword to ensure you receive deduplicated results. Without FINAL, queries may return duplicate rows until ClickHouse performs background merges.
+> **MySQL**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created in the database specified in your connection URI. Data is stored as JSON.
+>
+> **ClickHouse**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created using the ReplacingMergeTree engine. When querying, use the `FINAL` keyword to ensure deduplicated results.
