@@ -37,6 +37,7 @@ async function runInteractive(): Promise<{
 
     const databaseUri = await password({
         message: "Database connection URI:",
+        mask: true,
         validate: (v: string) => (v?.trim() ? true : "Database URI cannot be empty."),
     });
 
@@ -47,6 +48,7 @@ async function runInteractive(): Promise<{
 
     const apiKey = await password({
         message: "Dodo Payments API key:",
+        mask: true,
         validate: (v: string) => (v?.trim() ? true : "API key cannot be empty."),
     });
 
