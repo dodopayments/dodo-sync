@@ -231,3 +231,17 @@ syncDodoPayments.start();
 > **MySQL**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created in the database specified in your connection URI. Data is stored as JSON.
 >
 > **ClickHouse**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created using the ReplacingMergeTree engine. When querying, use the `FINAL` keyword to ensure deduplicated results.
+
+---
+
+## Breaking Changes (v1.0.0)
+
+> [!WARNING]
+> If you are upgrading from `v0.x` to `v1.0.0` or above:
+>
+> 1. **MongoDB Database Name from URI**:
+>    The database name is now dynamically extracted from your MongoDB connection URI (e.g. `mongodb://host:port/my_database`). If no database is specified in the URI path, it defaults to `dodopayments_sync`. Previously, it was hardcoded to `dodopayments_sync` regardless of the URI path.
+>
+> 2. **MongoDB Licence Primary Key Standardized**:
+>    Licence documents in MongoDB are now keyed by their license `id` (`_id: licence.id`), matching PostgreSQL, MySQL, and ClickHouse (previously, they were keyed by `subscription_id`).
+>    * **Upgrade Action**: If upgrading from `v0.x`, drop your existing `Licence` collection (or clear the old `dodopayments_sync` database). Re-running the sync will cleanly re-populate all records with the standardized primary key format.
