@@ -114,27 +114,41 @@ await syncDodoPayments.init();
 syncDodoPayments.start();
 ```
 
-#### Example: Manual Sync
+#### Example: Manual Sync (Serverless / On-Demand)
 
 ```ts
 import { DodoSync } from 'dodo-sync';
 
 const syncDodoPayments = new DodoSync({
-    database: 'mongodb',
-    databaseURI: process.env.MONGODB_URI,
+    database: 'postgres',
+    databaseURI: process.env.POSTGRES_URI,
     scopes: ['licences', 'payments', 'customers', 'subscriptions'],
     dodoPaymentsOptions: {
         bearerToken: process.env.DODO_PAYMENTS_API_KEY,
-        environment: 'test_mode'
+        environment: 'live_mode'
     }
 });
 
-// Initialize connection
-await syncDodoPayments.init();
+try {
+    // Initialize connection
+    await syncDodoPayments.init();
 
-// Trigger a single sync operation
-await syncDodoPayments.run();
+    // Trigger a single sync operation (batch inserts are awaited)
+    await syncDodoPayments.run();
+} finally {
+    // Cleanly close the database connection
+    await syncDodoPayments.disconnect();
+}
 ```
+
+#### Serverless (Vercel / AWS Lambda) Tips
+
+When running on-demand syncs in serverless functions (e.g. Next.js App Router):
+- **Set function timeout**: Syncing large datasets can take longer than the 15-second default timeout. Add `export const maxDuration = 60;` (or up to 300 on Vercel Pro).
+- **Use Node.js runtime**: Ensure `export const runtime = 'nodejs';` is set (Edge runtime lacks native TCP socket support for databases).
+- **Scope granularity**: For faster invocations, sync scopes individually (e.g. `scopes: ['payments']`).
+- **Clean teardown**: Always call `await syncDodoPayments.disconnect()` in a `finally` block to prevent lingering database connections across container cold/warm starts.
+
 
 #### Example: PostgreSQL
 
@@ -210,7 +224,7 @@ syncDodoPayments.start();
 ## Important Info
 
 > [!IMPORTANT]
-> **MongoDB**: A database named `dodopayments_sync` will be automatically created on your database server. All sync data will be stored there. This database name is currently fixed and cannot be changed.
+> **MongoDB**: Collections (`subscriptions`, `payments`, `licences`, `customers`) will be created in the database specified in your connection URI. If no database is specified in the URI, it defaults to `dodopayments_sync`.
 >
 > **PostgreSQL**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created in the database specified in your connection URI. Data is stored as JSONB.
 >

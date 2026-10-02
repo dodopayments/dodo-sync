@@ -1,7 +1,7 @@
 import { createClient, ClickHouseClient } from '@clickhouse/client';
 import DodoPayments from 'dodopayments';
 
-let clickhouseClient: ClickHouseClient;
+let clickhouseClient: ClickHouseClient | null = null;
 
 /**
  * Connects to ClickHouse database and initializes required tables
@@ -17,6 +17,13 @@ const ConnectClickHouse = async (uri: string) => {
     } catch (error) {
         console.error('Error connecting to ClickHouse:', error);
         throw error;
+    }
+}
+
+const DisconnectClickHouse = async () => {
+    if (clickhouseClient) {
+        await clickhouseClient.close();
+        clickhouseClient = null;
     }
 }
 
@@ -55,6 +62,7 @@ const initTables = async () => {
 
     for (const query of tableQueries) {
         try {
+            if (!clickhouseClient) throw new Error('ClickHouse client is not connected');
             await clickhouseClient.exec({ query });
         } catch (error) {
             console.error('Error creating table:', error);
@@ -63,96 +71,107 @@ const initTables = async () => {
     }
 }
 
-/**
- * Adds or updates a subscription in ClickHouse
- * @param subscriptionData - Subscription data from Dodo Payments API
- */
-async function AddSubscriptionClickHouse(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
-    try {
-        const id = subscriptionData.subscription_id;
-        const dataStr = JSON.stringify(subscriptionData);
+async function AddSubscriptionsClickHouse(subscriptions: DodoPayments.Subscriptions.SubscriptionListResponse[]) {
+    if (!subscriptions.length) return;
+    if (!clickhouseClient) throw new Error('ClickHouse client is not connected');
 
+    try {
         await clickhouseClient.insert({
             table: 'Subscriptions',
-            values: [{
-                id: id,
-                data: dataStr
-            }],
+            values: subscriptions.map((s) => ({
+                id: s.subscription_id,
+                data: JSON.stringify(s)
+            })),
             format: 'JSONEachRow'
         });
     } catch (error) {
-        console.error(`Error syncing subscription ${subscriptionData.subscription_id}:`, error);
+        console.error('Error syncing subscriptions:', error);
         throw error;
     }
 }
 
-/**
- * Adds or updates a payment in ClickHouse
- * @param paymentData - Payment data from Dodo Payments API
- */
-async function AddPaymentClickHouse(paymentData: DodoPayments.Payments.PaymentListResponse) {
-    try {
-        const id = paymentData.payment_id;
-        const dataStr = JSON.stringify(paymentData);
+async function AddSubscriptionClickHouse(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
+    await AddSubscriptionsClickHouse([subscriptionData]);
+}
 
+async function AddPaymentsClickHouse(payments: DodoPayments.Payments.PaymentListResponse[]) {
+    if (!payments.length) return;
+    if (!clickhouseClient) throw new Error('ClickHouse client is not connected');
+
+    try {
         await clickhouseClient.insert({
             table: 'Payments',
-            values: [{
-                id: id,
-                data: dataStr
-            }],
+            values: payments.map((p) => ({
+                id: p.payment_id,
+                data: JSON.stringify(p)
+            })),
             format: 'JSONEachRow'
         });
     } catch (error) {
-        console.error(`Error syncing payment ${paymentData.payment_id}:`, error);
+        console.error('Error syncing payments:', error);
         throw error;
     }
 }
 
-/**
- * Adds or updates a license in ClickHouse
- * @param licenceData - License data from Dodo Payments API
- */
-async function AddLicenceClickHouse(licenceData: DodoPayments.LicenseKeys.LicenseKey) {
-    try {
-        const id = licenceData.id;
-        const dataStr = JSON.stringify(licenceData);
+async function AddPaymentClickHouse(paymentData: DodoPayments.Payments.PaymentListResponse) {
+    await AddPaymentsClickHouse([paymentData]);
+}
 
+async function AddLicencesClickHouse(licences: DodoPayments.LicenseKeys.LicenseKey[]) {
+    if (!licences.length) return;
+    if (!clickhouseClient) throw new Error('ClickHouse client is not connected');
+
+    try {
         await clickhouseClient.insert({
             table: 'Licenses',
-            values: [{
-                id: id,
-                data: dataStr
-            }],
+            values: licences.map((l) => ({
+                id: l.id,
+                data: JSON.stringify(l)
+            })),
             format: 'JSONEachRow'
         });
     } catch (error) {
-        console.error(`Error syncing license ${licenceData.id}:`, error);
+        console.error('Error syncing licenses:', error);
         throw error;
     }
 }
 
-/**
- * Adds or updates a customer in ClickHouse
- * @param customerData - Customer data from Dodo Payments API
- */
-async function AddCustomerClickHouse(customerData: DodoPayments.Customers.Customer) {
-    try {
-        const id = customerData.customer_id;
-        const dataStr = JSON.stringify(customerData);
+async function AddLicenceClickHouse(licenceData: DodoPayments.LicenseKeys.LicenseKey) {
+    await AddLicencesClickHouse([licenceData]);
+}
 
+async function AddCustomersClickHouse(customers: DodoPayments.Customers.Customer[]) {
+    if (!customers.length) return;
+    if (!clickhouseClient) throw new Error('ClickHouse client is not connected');
+
+    try {
         await clickhouseClient.insert({
             table: 'Customers',
-            values: [{
-                id: id,
-                data: dataStr
-            }],
+            values: customers.map((c) => ({
+                id: c.customer_id,
+                data: JSON.stringify(c)
+            })),
             format: 'JSONEachRow'
         });
     } catch (error) {
-        console.error(`Error syncing customer ${customerData.customer_id}:`, error);
+        console.error('Error syncing customers:', error);
         throw error;
     }
 }
 
-export { ConnectClickHouse, AddSubscriptionClickHouse, AddPaymentClickHouse, AddLicenceClickHouse, AddCustomerClickHouse };
+async function AddCustomerClickHouse(customerData: DodoPayments.Customers.Customer) {
+    await AddCustomersClickHouse([customerData]);
+}
+
+export {
+    ConnectClickHouse,
+    DisconnectClickHouse,
+    AddSubscriptionClickHouse,
+    AddSubscriptionsClickHouse,
+    AddPaymentClickHouse,
+    AddPaymentsClickHouse,
+    AddLicenceClickHouse,
+    AddLicencesClickHouse,
+    AddCustomerClickHouse,
+    AddCustomersClickHouse
+};

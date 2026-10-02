@@ -1,7 +1,7 @@
 import { Client } from 'pg'
 import DodoPayments from 'dodopayments';
 
-let pgClient: Client
+let pgClient: Client | null = null;
 
 const ConnectPostgres = async (uri: string) => {
     try {
@@ -13,6 +13,13 @@ const ConnectPostgres = async (uri: string) => {
     } catch (error) {
         console.error('Error connecting to PostgreSQL:', error);
         throw error;
+    }
+}
+
+const DisconnectPostgres = async () => {
+    if (pgClient) {
+        await pgClient.end();
+        pgClient = null;
     }
 }
 
@@ -38,6 +45,7 @@ const initTables = async () => {
     ];
     for (const query of tableQueries) {
         try {
+            if (!pgClient) throw new Error('PostgreSQL client is not connected');
             await pgClient.query(query);
         } catch (error) {
             throw error;
@@ -45,83 +53,111 @@ const initTables = async () => {
     }
 }
 
-async function AddSubscriptionPostgres(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
+async function AddSubscriptionsPostgres(subscriptions: DodoPayments.Subscriptions.SubscriptionListResponse[]) {
+    if (!subscriptions.length) return;
+    if (!pgClient) throw new Error('PostgreSQL client is not connected');
+
     const query = `
         INSERT INTO Subscriptions (id, data)
-        VALUES ($1, $2)
-        ON CONFLICT (id) DO UPDATE SET
-        data = EXCLUDED.data;
+        SELECT x->>'k', x->'v'
+        FROM jsonb_array_elements($1::jsonb) x
+        ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
     `;
-
-    const values = [
-        subscriptionData.subscription_id,
-        JSON.stringify(subscriptionData)
-    ];
+    const payload = JSON.stringify(subscriptions.map(s => ({ k: s.subscription_id, v: s })));
 
     try {
-        await pgClient.query(query, values);
+        await pgClient.query(query, [payload]);
     } catch (error) {
-        console.error(`Error syncing subscription ${subscriptionData.subscription_id}:`, error);
+        console.error('Error syncing subscriptions:', error);
+        throw error;
+    }
+}
+
+async function AddSubscriptionPostgres(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
+    await AddSubscriptionsPostgres([subscriptionData]);
+}
+
+async function AddPaymentsPostgres(payments: DodoPayments.Payments.PaymentListResponse[]) {
+    if (!payments.length) return;
+    if (!pgClient) throw new Error('PostgreSQL client is not connected');
+
+    const query = `
+        INSERT INTO Payments (id, data)
+        SELECT x->>'k', x->'v'
+        FROM jsonb_array_elements($1::jsonb) x
+        ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
+    `;
+    const payload = JSON.stringify(payments.map(p => ({ k: p.payment_id, v: p })));
+
+    try {
+        await pgClient.query(query, [payload]);
+    } catch (error) {
+        console.error('Error syncing payments:', error);
         throw error;
     }
 }
 
 async function AddPaymentPostgres(paymentData: DodoPayments.Payments.PaymentListResponse) {
-    const query = `
-        INSERT INTO Payments (id, data)
-        VALUES ($1, $2)
-        ON CONFLICT (id) DO UPDATE SET
-        data = EXCLUDED.data;
-    `;
+    await AddPaymentsPostgres([paymentData]);
+}
 
-    const values = [
-        paymentData.payment_id,
-        JSON.stringify(paymentData)
-    ]
+async function AddLicencesPostgres(licences: DodoPayments.LicenseKeys.LicenseKey[]) {
+    if (!licences.length) return;
+    if (!pgClient) throw new Error('PostgreSQL client is not connected');
+
+    const query = `
+        INSERT INTO Licenses (id, data)
+        SELECT x->>'k', x->'v'
+        FROM jsonb_array_elements($1::jsonb) x
+        ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
+    `;
+    const payload = JSON.stringify(licences.map(l => ({ k: l.id, v: l })));
+
     try {
-        await pgClient.query(query, values)
+        await pgClient.query(query, [payload]);
     } catch (error) {
-        console.error(`Error syncing subscription ${paymentData.payment_id}:`, error);
+        console.error('Error syncing licenses:', error);
         throw error;
     }
 }
 
 async function AddLicencePostgres(licenceData: DodoPayments.LicenseKeys.LicenseKey) {
+    await AddLicencesPostgres([licenceData]);
+}
+
+async function AddCustomersPostgres(customers: DodoPayments.Customers.Customer[]) {
+    if (!customers.length) return;
+    if (!pgClient) throw new Error('PostgreSQL client is not connected');
+
     const query = `
-        INSERT INTO Licenses (id, data)
-        VALUES ($1, $2)
-        ON CONFLICT (id) DO UPDATE SET
-        data = EXCLUDED.data;
+        INSERT INTO Customers (id, data)
+        SELECT x->>'k', x->'v'
+        FROM jsonb_array_elements($1::jsonb) x
+        ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
     `;
-    const values = [
-        licenceData.id,
-        JSON.stringify(licenceData)
-    ]
+    const payload = JSON.stringify(customers.map(c => ({ k: c.customer_id, v: c })));
+
     try {
-        await pgClient.query(query, values)
+        await pgClient.query(query, [payload]);
     } catch (error) {
-        console.error(`Error syncing license ${licenceData.id}:`, error);
+        console.error('Error syncing customers:', error);
         throw error;
     }
 }
 
 async function AddCustomerPostgres(customerData: DodoPayments.Customers.Customer) {
-    const query = `
-        INSERT INTO Customers (id, data)
-        VALUES ($1, $2)
-        ON CONFLICT (id) DO UPDATE SET
-        data = EXCLUDED.data;
-    `;
-    const values = [
-        customerData.customer_id,
-        JSON.stringify(customerData)
-    ]
-    try {
-        await pgClient.query(query, values)
-    } catch (error) {
-        console.error(`Error syncing Customer ${customerData.customer_id}:`, error);
-        throw error;
-    }
+    await AddCustomersPostgres([customerData]);
 }
 
-export { ConnectPostgres, AddSubscriptionPostgres, AddPaymentPostgres, AddLicencePostgres, AddCustomerPostgres };
+export {
+    ConnectPostgres,
+    DisconnectPostgres,
+    AddSubscriptionPostgres,
+    AddSubscriptionsPostgres,
+    AddPaymentPostgres,
+    AddPaymentsPostgres,
+    AddLicencePostgres,
+    AddLicencesPostgres,
+    AddCustomerPostgres,
+    AddCustomersPostgres
+};

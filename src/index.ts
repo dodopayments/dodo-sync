@@ -1,9 +1,55 @@
 import DodoPayments, { type ClientOptions } from 'dodopayments';
-import { AddCustomerMongoDB, AddLicenceMongoDB, AddPaymentMongoDB, AddSubscriptionMongoDB, ConnectMongoDB } from './database-integrations/mongodb';
-import { AddCustomerPostgres, AddLicencePostgres, AddPaymentPostgres, AddSubscriptionPostgres, ConnectPostgres } from './database-integrations/postgres';
-import { AddCustomerClickHouse, AddLicenceClickHouse, AddPaymentClickHouse, AddSubscriptionClickHouse, ConnectClickHouse } from './database-integrations/clickhouse';
-import { AddCustomerMySQL, AddLicenceMySQL, AddPaymentMySQL, AddSubscriptionMySQL, ConnectMySQL } from './database-integrations/mysql';
+import {
+    AddCustomerMongoDB,
+    AddCustomersMongoDB,
+    AddLicenceMongoDB,
+    AddLicencesMongoDB,
+    AddPaymentMongoDB,
+    AddPaymentsMongoDB,
+    AddSubscriptionMongoDB,
+    AddSubscriptionsMongoDB,
+    ConnectMongoDB,
+    DisconnectMongoDB
+} from './database-integrations/mongodb';
+import {
+    AddCustomerPostgres,
+    AddCustomersPostgres,
+    AddLicencePostgres,
+    AddLicencesPostgres,
+    AddPaymentPostgres,
+    AddPaymentsPostgres,
+    AddSubscriptionPostgres,
+    AddSubscriptionsPostgres,
+    ConnectPostgres,
+    DisconnectPostgres
+} from './database-integrations/postgres';
+import {
+    AddCustomerClickHouse,
+    AddCustomersClickHouse,
+    AddLicenceClickHouse,
+    AddLicencesClickHouse,
+    AddPaymentClickHouse,
+    AddPaymentsClickHouse,
+    AddSubscriptionClickHouse,
+    AddSubscriptionsClickHouse,
+    ConnectClickHouse,
+    DisconnectClickHouse
+} from './database-integrations/clickhouse';
+import {
+    AddCustomerMySQL,
+    AddCustomersMySQL,
+    AddLicenceMySQL,
+    AddLicencesMySQL,
+    AddPaymentMySQL,
+    AddPaymentsMySQL,
+    AddSubscriptionMySQL,
+    AddSubscriptionsMySQL,
+    ConnectMySQL,
+    DisconnectMySQL
+} from './database-integrations/mysql';
+
 type scopes = ('licences' | 'payments' | 'customers' | 'subscriptions')[];
+
 class DodoSync {
     private interval: number;
     private database: 'mongodb' | 'postgres' | 'mysql' | 'clickhouse';
@@ -46,7 +92,6 @@ class DodoSync {
         this.database = database;
         this.databaseURI = databaseURI;
         this.scopes = scopes;
-        this.scopes = scopes;
         this.rateLimit = rateLimit;
         this.DodoPaymentsClient = new DodoPayments(dodoPaymentsOptions);
     }
@@ -63,7 +108,6 @@ class DodoSync {
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
-
 
     // This is to connect the specified database
     async init() {
@@ -88,171 +132,174 @@ class DodoSync {
         }
     }
 
-
-
-
-
-    // These functions will add data to the database as per the specified database
-    // This will add licence to the database
-    private addLicence(licenceData: DodoPayments.LicenseKeys.LicenseKey) {
+    // Disconnect from the database (essential for serverless environments)
+    async disconnect() {
+        this.stop();
         if (this.database === 'mongodb') {
-            AddLicenceMongoDB(licenceData);
+            await DisconnectMongoDB();
+        } else if (this.database === 'postgres') {
+            await DisconnectPostgres();
+        } else if (this.database === 'clickhouse') {
+            await DisconnectClickHouse();
+        } else if (this.database === 'mysql') {
+            await DisconnectMySQL();
+        }
+        this.isInit = false;
+    }
+
+    // Alias for disconnect()
+    async close() {
+        await this.disconnect();
+    }
+
+    // Batch database write functions (awaited)
+    private async addLicences(licencesData: DodoPayments.LicenseKeys.LicenseKey[]) {
+        if (!licencesData.length) return;
+        if (this.database === 'mongodb') {
+            await AddLicencesMongoDB(licencesData);
         }
         else if (this.database === 'postgres') {
-            AddLicencePostgres(licenceData);
+            await AddLicencesPostgres(licencesData);
         }
         else if (this.database === 'clickhouse') {
-            AddLicenceClickHouse(licenceData);
+            await AddLicencesClickHouse(licencesData);
         }
         else if (this.database === 'mysql') {
-            AddLicenceMySQL(licenceData);
+            await AddLicencesMySQL(licencesData);
         }
     }
 
-    // This will add subscription to the database
-    private addSubscription(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
+    private async addSubscriptions(subscriptionsData: DodoPayments.Subscriptions.SubscriptionListResponse[]) {
+        if (!subscriptionsData.length) return;
         if (this.database === 'mongodb') {
-            AddSubscriptionMongoDB(subscriptionData);
+            await AddSubscriptionsMongoDB(subscriptionsData);
         }
         else if (this.database === 'postgres') {
-            AddSubscriptionPostgres(subscriptionData);
+            await AddSubscriptionsPostgres(subscriptionsData);
         }
         else if (this.database === 'clickhouse') {
-            AddSubscriptionClickHouse(subscriptionData);
+            await AddSubscriptionsClickHouse(subscriptionsData);
         }
         else if (this.database === 'mysql') {
-            AddSubscriptionMySQL(subscriptionData);
+            await AddSubscriptionsMySQL(subscriptionsData);
         }
     }
 
-    // This will add payment to the database
-    private addPayment(paymentData: DodoPayments.Payments.PaymentListResponse) {
+    private async addPayments(paymentsData: DodoPayments.Payments.PaymentListResponse[]) {
+        if (!paymentsData.length) return;
         if (this.database === 'mongodb') {
-            AddPaymentMongoDB(paymentData);
+            await AddPaymentsMongoDB(paymentsData);
         }
         else if (this.database === 'postgres') {
-            AddPaymentPostgres(paymentData);
+            await AddPaymentsPostgres(paymentsData);
         }
         else if (this.database === 'clickhouse') {
-            AddPaymentClickHouse(paymentData);
+            await AddPaymentsClickHouse(paymentsData);
         }
         else if (this.database === 'mysql') {
-            AddPaymentMySQL(paymentData);
+            await AddPaymentsMySQL(paymentsData);
         }
     }
 
-    // This will add customer to the database
-    private addCustomer(customerData: DodoPayments.Customers.Customer) {
+    private async addCustomers(customersData: DodoPayments.Customers.Customer[]) {
+        if (!customersData.length) return;
         if (this.database === 'mongodb') {
-            AddCustomerMongoDB(customerData);
+            await AddCustomersMongoDB(customersData);
         }
         else if (this.database === 'postgres') {
-            AddCustomerPostgres(customerData);
+            await AddCustomersPostgres(customersData);
         }
         else if (this.database === 'clickhouse') {
-            AddCustomerClickHouse(customerData);
+            await AddCustomersClickHouse(customersData);
         }
         else if (this.database === 'mysql') {
-            AddCustomerMySQL(customerData);
+            await AddCustomersMySQL(customersData);
         }
     }
 
+    // Single item helper methods for backward compatibility
+    async addLicence(licenceData: DodoPayments.LicenseKeys.LicenseKey) {
+        await this.addLicences([licenceData]);
+    }
 
+    async addSubscription(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
+        await this.addSubscriptions([subscriptionData]);
+    }
 
+    async addPayment(paymentData: DodoPayments.Payments.PaymentListResponse) {
+        await this.addPayments([paymentData]);
+    }
 
+    async addCustomer(customerData: DodoPayments.Customers.Customer) {
+        await this.addCustomers([customerData]);
+    }
 
-    // These functions will fetch data from Dodo Payments API recrisively and add to the database
-    // Fetch licences
-    private async fetchLicences(
-        { page = 0 }: { page?: number } = {}
-    ) {
-        await this.throttle();
-        const licences = await this.DodoPaymentsClient.licenseKeys.list({
-            page_number: page,
-            page_size: 100
-        });
-
-        for (const licence of licences.items) {
-            this.addLicence(licence);
-        }
-
-        if (licences.hasNextPage()) {
-            await this.fetchLicences({
-                page: page + 1
+    // Iterative pagination and sync methods
+    private async fetchLicences() {
+        for (let page = 0, more = true; more; page++) {
+            await this.throttle();
+            const licences = await this.DodoPaymentsClient.licenseKeys.list({
+                page_number: page,
+                page_size: 100
             });
+
+            if (licences.items && licences.items.length > 0) {
+                await this.addLicences(licences.items);
+            }
+
+            more = licences.hasNextPage();
         }
     }
 
-    // Fetch subscriptions
-    private async fetchSubscriptions(
-        { page = 0 }: { page?: number } = {}
-    ) {
-        await this.throttle();
-        const subscriptions = await this.DodoPaymentsClient.subscriptions.list({
-            page_number: page,
-            page_size: 100
-        });
-
-
-        for (const subscription of subscriptions.items) {
-            this.addSubscription(subscription);
-        }
-
-        if (subscriptions.hasNextPage()) {
-            await this.fetchSubscriptions({
-                page: page + 1
+    private async fetchSubscriptions() {
+        for (let page = 0, more = true; more; page++) {
+            await this.throttle();
+            const subscriptions = await this.DodoPaymentsClient.subscriptions.list({
+                page_number: page,
+                page_size: 100
             });
+
+            if (subscriptions.items && subscriptions.items.length > 0) {
+                await this.addSubscriptions(subscriptions.items);
+            }
+
+            more = subscriptions.hasNextPage();
         }
     }
 
-    // Fetch payments
-    private async fetchPayments(
-        { page = 0 }: { page?: number } = {}
-    ) {
-        await this.throttle();
-        const payments = await this.DodoPaymentsClient.payments.list({
-            page_number: page,
-            page_size: 100
-        });
-
-        for (const payment of payments.items) {
-            this.addPayment(payment);
-        }
-
-        if (payments.hasNextPage()) {
-            await this.fetchPayments({
-                page: page + 1
+    private async fetchPayments() {
+        for (let page = 0, more = true; more; page++) {
+            await this.throttle();
+            const payments = await this.DodoPaymentsClient.payments.list({
+                page_number: page,
+                page_size: 100
             });
+
+            if (payments.items && payments.items.length > 0) {
+                await this.addPayments(payments.items);
+            }
+
+            more = payments.hasNextPage();
         }
     }
 
-    // Fetch customers
-    private async fetchCustomers(
-        { page = 0 }: { page?: number } = {}
-    ) {
-        await this.throttle();
-        const customers = await this.DodoPaymentsClient.customers.list({
-            page_number: page,
-            page_size: 100
-        });
-
-        for (const customer of customers.items) {
-            this.addCustomer(customer);
-        }
-
-        if (customers.hasNextPage()) {
-            await this.fetchCustomers({
-                page: page + 1
+    private async fetchCustomers() {
+        for (let page = 0, more = true; more; page++) {
+            await this.throttle();
+            const customers = await this.DodoPaymentsClient.customers.list({
+                page_number: page,
+                page_size: 100
             });
+
+            if (customers.items && customers.items.length > 0) {
+                await this.addCustomers(customers.items);
+            }
+
+            more = customers.hasNextPage();
         }
     }
 
-
-
-
-
-    // This function will run the sync process every specified interval
-    // I have exposed it (not made it private) so that it can be called manually if needed
+    // Runs a single pass of the sync process for all configured scopes
     async run() {
         if (this.scopes.includes('licences')) {
             await this.fetchLicences();
@@ -271,31 +318,35 @@ class DodoSync {
         }
     }
 
-
-
-
-
-
-    // This function will start the sync process at specified intervals
+    // Starts the sync process at specified intervals
     async start() {
         if (!this.isInit) {
             throw new Error("Client not initialized. Please call init() before starting the sync process.");
         }
 
-        // Only run if interval is greater than 0 (i.e, it's specified). If the interval is not sepecified or is 0, the sync process will not run automatically. The user will have to call .run() manually to start the sync process.
         if (this.interval > 0) {
-            this.run();
+            await this.run();
             this.timer = setInterval(() => this.run(), this.interval * 1000);
         }
-
     }
 
-    // This function will stop the sync process
+    // Stops the recurring sync timer
     stop() {
         if (this.timer) {
             clearInterval(this.timer);
+            this.timer = undefined;
         }
     }
 }
 
-export { DodoSync };
+export {
+    DodoSync,
+    ConnectMongoDB,
+    DisconnectMongoDB,
+    ConnectPostgres,
+    DisconnectPostgres,
+    ConnectClickHouse,
+    DisconnectClickHouse,
+    ConnectMySQL,
+    DisconnectMySQL
+};
