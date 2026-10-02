@@ -237,7 +237,7 @@ syncDodoPayments.start();
 ## Breaking Changes (v1.0.0)
 
 > [!WARNING]
-> If you are upgrading from `v0.x` to `v1.0.0` or above:
+> If you are upgrading from `v0.x` to `v1.x` and above:
 >
 > 1. **MongoDB Database Name from URI**:
 >    The database name is now dynamically extracted from your MongoDB connection URI (e.g. `mongodb://host:port/my_database`). If no database is specified in the URI path, it defaults to `dodopayments_sync`. Previously, it was hardcoded to `dodopayments_sync` regardless of the URI path.

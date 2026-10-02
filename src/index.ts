@@ -318,6 +318,23 @@ class DodoSync {
         }
     }
 
+    private isSyncing: boolean = false;
+
+    private async executeSync() {
+        if (this.isSyncing) {
+            console.warn("DodoSync: A sync operation is already in progress, skipping this interval tick.");
+            return;
+        }
+        this.isSyncing = true;
+        try {
+            await this.run();
+        } catch (error) {
+            console.error("DodoSync: Error during sync run:", error);
+        } finally {
+            this.isSyncing = false;
+        }
+    }
+
     // Starts the sync process at specified intervals
     async start() {
         if (!this.isInit) {
@@ -325,8 +342,13 @@ class DodoSync {
         }
 
         if (this.interval > 0) {
-            await this.run();
-            this.timer = setInterval(() => this.run(), this.interval * 1000);
+            // Set the interval timer first so scheduled syncing always continues even if the initial sync fails
+            this.timer = setInterval(() => {
+                this.executeSync();
+            }, this.interval * 1000);
+
+            // Execute the initial sync immediately; errors are handled inside executeSync so the timer remains active
+            await this.executeSync();
         }
     }
 
