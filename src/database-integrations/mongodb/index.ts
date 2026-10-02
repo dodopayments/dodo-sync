@@ -69,7 +69,7 @@ async function AddLicencesMongoDB(licences: DodoPayments.LicenseKeys.LicenseKey[
     if (!licences.length) return;
     const ops = licences.map((l) => ({
         updateOne: {
-            filter: { _id: l.id || l.subscription_id },
+            filter: { _id: l.id },
             update: { $set: l },
             upsert: true
         }
