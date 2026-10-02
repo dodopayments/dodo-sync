@@ -248,4 +248,4 @@ syncDodoPayments.start();
 >
 > 3. **MySQL Version Requirement**:
 >    * **Requirement**: Minimum **MySQL version 8.0.20** is required for the sync engine to function correctly.
->    * **Reason**: The sync ngine uses an updated method in its UPSERT operations, which is not supported in older MySQL versions and has been deprecated in newer MySQL versions.
+>    * **Reason**: The sync engine uses an updated method in its UPSERT operations, which is not supported in older MySQL versions and has been deprecated in newer MySQL versions.
