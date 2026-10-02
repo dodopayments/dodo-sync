@@ -53,6 +53,14 @@ const initTables = async () => {
     }
 }
 
+// Serialises rows for jsonb_array_elements, de-duplicating by id (last one wins)
+// so ON CONFLICT DO UPDATE never touches the same row twice in one statement.
+function toPayload<T>(items: T[], getId: (item: T) => string): string {
+    const byId = new Map<string, T>();
+    for (const item of items) byId.set(getId(item), item);
+    return JSON.stringify(Array.from(byId, ([k, v]) => ({ k, v })));
+}
+
 async function AddSubscriptionsPostgres(subscriptions: DodoPayments.Subscriptions.SubscriptionListResponse[]) {
     if (!subscriptions.length) return;
     if (!pgClient) throw new Error('PostgreSQL client is not connected');
@@ -63,7 +71,7 @@ async function AddSubscriptionsPostgres(subscriptions: DodoPayments.Subscription
         FROM jsonb_array_elements($1::jsonb) x
         ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
     `;
-    const payload = JSON.stringify(subscriptions.map(s => ({ k: s.subscription_id, v: s })));
+    const payload = toPayload(subscriptions, (s) => s.subscription_id);
 
     try {
         await pgClient.query(query, [payload]);
@@ -87,7 +95,7 @@ async function AddPaymentsPostgres(payments: DodoPayments.Payments.PaymentListRe
         FROM jsonb_array_elements($1::jsonb) x
         ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
     `;
-    const payload = JSON.stringify(payments.map(p => ({ k: p.payment_id, v: p })));
+    const payload = toPayload(payments, (p) => p.payment_id);
 
     try {
         await pgClient.query(query, [payload]);
@@ -111,7 +119,7 @@ async function AddLicencesPostgres(licences: DodoPayments.LicenseKeys.LicenseKey
         FROM jsonb_array_elements($1::jsonb) x
         ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
     `;
-    const payload = JSON.stringify(licences.map(l => ({ k: l.id, v: l })));
+    const payload = toPayload(licences, (l) => l.id);
 
     try {
         await pgClient.query(query, [payload]);
@@ -135,7 +143,7 @@ async function AddCustomersPostgres(customers: DodoPayments.Customers.Customer[]
         FROM jsonb_array_elements($1::jsonb) x
         ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;
     `;
-    const payload = JSON.stringify(customers.map(c => ({ k: c.customer_id, v: c })));
+    const payload = toPayload(customers, (c) => c.customer_id);
 
     try {
         await pgClient.query(query, [payload]);
