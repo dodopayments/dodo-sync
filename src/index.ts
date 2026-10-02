@@ -217,20 +217,20 @@ class DodoSync {
         }
     }
 
-    // Single item helper methods for backward compatibility
-    async addLicence(licenceData: DodoPayments.LicenseKeys.LicenseKey) {
+    // Single item helper methods for internal/backward compatibility
+    private async addLicence(licenceData: DodoPayments.LicenseKeys.LicenseKey) {
         await this.addLicences([licenceData]);
     }
 
-    async addSubscription(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
+    private async addSubscription(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
         await this.addSubscriptions([subscriptionData]);
     }
 
-    async addPayment(paymentData: DodoPayments.Payments.PaymentListResponse) {
+    private async addPayment(paymentData: DodoPayments.Payments.PaymentListResponse) {
         await this.addPayments([paymentData]);
     }
 
-    async addCustomer(customerData: DodoPayments.Customers.Customer) {
+    private async addCustomer(customerData: DodoPayments.Customers.Customer) {
         await this.addCustomers([customerData]);
     }
 
@@ -361,14 +361,4 @@ class DodoSync {
     }
 }
 
-export {
-    DodoSync,
-    ConnectMongoDB,
-    DisconnectMongoDB,
-    ConnectPostgres,
-    DisconnectPostgres,
-    ConnectClickHouse,
-    DisconnectClickHouse,
-    ConnectMySQL,
-    DisconnectMySQL
-};
+export { DodoSync };
