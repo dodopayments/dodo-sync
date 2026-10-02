@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
+import { DodoSync } from "../index";
 import input from "@inquirer/input";
 import select from "@inquirer/select";
+import { hideBin } from "yargs/helpers";
+import password from "@inquirer/password";
 import checkbox from "@inquirer/checkbox";
-import { DodoSync } from "../index";
 
 const supportedDatabases = ["mongodb", "postgres", "mysql", "clickhouse"];
 const supportedScopes = ["licences", "payments", "customers", "subscriptions"] as const;
@@ -34,7 +35,7 @@ async function runInteractive(): Promise<{
         choices: supportedDatabases.map((d) => ({ name: d, value: d })),
     });
 
-    const databaseUri = await input({
+    const databaseUri = await password({
         message: "Database connection URI:",
         validate: (v: string) => (v?.trim() ? true : "Database URI cannot be empty."),
     });
@@ -44,7 +45,7 @@ async function runInteractive(): Promise<{
         choices: supportedScopes.map((scope) => ({ name: scope, value: scope })),
     });
 
-    const apiKey = await input({
+    const apiKey = await password({
         message: "Dodo Payments API key:",
         validate: (v: string) => (v?.trim() ? true : "API key cannot be empty."),
     });

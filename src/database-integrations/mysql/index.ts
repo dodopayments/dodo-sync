@@ -1,7 +1,8 @@
 import mysql from 'mysql2/promise';
 import DodoPayments from 'dodopayments';
 
-let sqlClient: mysql.Connection
+let sqlClient: mysql.Connection | null = null;
+
 const ConnectMySQL = async (uri : string) => {
     try {
         sqlClient = await mysql.createConnection(uri);
@@ -9,6 +10,13 @@ const ConnectMySQL = async (uri : string) => {
     } catch (error) {
         console.error('Error connecting to MySQL:', error);
         throw error;
+    }
+}
+
+const DisconnectMySQL = async () => {
+    if (sqlClient) {
+        await sqlClient.end();
+        sqlClient = null;
     }
 }
 
@@ -33,6 +41,7 @@ const initTables = async () => {
     ];
     for (const query of tableQueries) {
         try {
+            if (!sqlClient) throw new Error('MySQL client is not connected');
             await sqlClient.execute(query);
         } catch (error) {
             throw error;
@@ -40,79 +49,123 @@ const initTables = async () => {
     }
 }
 
-async function AddSubscriptionMySQL(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
+async function AddSubscriptionsMySQL(subscriptions: DodoPayments.Subscriptions.SubscriptionListResponse[]) {
+    if (!subscriptions.length) return;
+    if (!sqlClient) throw new Error('MySQL client is not connected');
+
+    const placeholders = subscriptions.map(() => '(?, ?)').join(', ');
     const query = `
         INSERT INTO Subscriptions (id, data)
-        VALUES (?, ?)
+        VALUES ${placeholders}
         ON DUPLICATE KEY UPDATE data = VALUES(data);
     `;
-
-    const values = [
-        subscriptionData.subscription_id,
-        JSON.stringify(subscriptionData)
-    ];
+    const values: any[] = [];
+    for (const sub of subscriptions) {
+        values.push(sub.subscription_id, JSON.stringify(sub));
+    }
 
     try {
         await sqlClient.execute(query, values);
     } catch (error) {
-        console.error(`Error syncing subscription ${subscriptionData.subscription_id}:`, error);
+        console.error('Error syncing subscriptions:', error);
+        throw error;
+    }
+}
+
+async function AddSubscriptionMySQL(subscriptionData: DodoPayments.Subscriptions.SubscriptionListResponse) {
+    await AddSubscriptionsMySQL([subscriptionData]);
+}
+
+async function AddPaymentsMySQL(payments: DodoPayments.Payments.PaymentListResponse[]) {
+    if (!payments.length) return;
+    if (!sqlClient) throw new Error('MySQL client is not connected');
+
+    const placeholders = payments.map(() => '(?, ?)').join(', ');
+    const query = `
+        INSERT INTO Payments (id, data)
+        VALUES ${placeholders}
+        ON DUPLICATE KEY UPDATE data = VALUES(data);
+    `;
+    const values: any[] = [];
+    for (const payment of payments) {
+        values.push(payment.payment_id, JSON.stringify(payment));
+    }
+
+    try {
+        await sqlClient.execute(query, values);
+    } catch (error) {
+        console.error('Error syncing payments:', error);
         throw error;
     }
 }
 
 async function AddPaymentMySQL(paymentData: DodoPayments.Payments.PaymentListResponse) {
+    await AddPaymentsMySQL([paymentData]);
+}
+
+async function AddLicencesMySQL(licences: DodoPayments.LicenseKeys.LicenseKey[]) {
+    if (!licences.length) return;
+    if (!sqlClient) throw new Error('MySQL client is not connected');
+
+    const placeholders = licences.map(() => '(?, ?)').join(', ');
     const query = `
-        INSERT INTO Payments (id, data)
-        VALUES (?, ?)
+        INSERT INTO Licenses (id, data)
+        VALUES ${placeholders}
         ON DUPLICATE KEY UPDATE data = VALUES(data);
     `;
+    const values: any[] = [];
+    for (const licence of licences) {
+        values.push(licence.id, JSON.stringify(licence));
+    }
 
-    const values = [
-        paymentData.payment_id,
-        JSON.stringify(paymentData)
-    ]
     try {
-        await sqlClient.execute(query, values)
+        await sqlClient.execute(query, values);
     } catch (error) {
-        console.error(`Error syncing subscription ${paymentData.payment_id}:`, error);
+        console.error('Error syncing licenses:', error);
         throw error;
     }
 }
 
 async function AddLicenceMySQL(licenceData: DodoPayments.LicenseKeys.LicenseKey) {
+    await AddLicencesMySQL([licenceData]);
+}
+
+async function AddCustomersMySQL(customers: DodoPayments.Customers.Customer[]) {
+    if (!customers.length) return;
+    if (!sqlClient) throw new Error('MySQL client is not connected');
+
+    const placeholders = customers.map(() => '(?, ?)').join(', ');
     const query = `
-        INSERT INTO Licenses (id, data)
-        VALUES (?, ?)
+        INSERT INTO Customers (id, data)
+        VALUES ${placeholders}
         ON DUPLICATE KEY UPDATE data = VALUES(data);
     `;
-    const values = [
-        licenceData.id,
-        JSON.stringify(licenceData)
-    ]
+    const values: any[] = [];
+    for (const customer of customers) {
+        values.push(customer.customer_id, JSON.stringify(customer));
+    }
+
     try {
-        await sqlClient.execute(query, values)
+        await sqlClient.execute(query, values);
     } catch (error) {
-        console.error(`Error syncing license ${licenceData.id}:`, error);
+        console.error('Error syncing customers:', error);
         throw error;
     }
 }
 
 async function AddCustomerMySQL(customerData: DodoPayments.Customers.Customer) {
-    const query = `
-        INSERT INTO Customers (id, data)
-        VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE data = VALUES(data);
-    `;
-    const values = [
-        customerData.customer_id,
-        JSON.stringify(customerData)
-    ]
-    try {
-        await sqlClient.execute(query, values)
-    } catch (error) {
-        console.error(`Error syncing Customer ${customerData.customer_id}:`, error);
-        throw error;
-    }
+    await AddCustomersMySQL([customerData]);
 }
 
-export { ConnectMySQL, AddSubscriptionMySQL, AddPaymentMySQL, AddLicenceMySQL, AddCustomerMySQL };
+export {
+    ConnectMySQL,
+    DisconnectMySQL,
+    AddSubscriptionMySQL,
+    AddSubscriptionsMySQL,
+    AddPaymentMySQL,
+    AddPaymentsMySQL,
+    AddLicenceMySQL,
+    AddLicencesMySQL,
+    AddCustomerMySQL,
+    AddCustomersMySQL
+};
