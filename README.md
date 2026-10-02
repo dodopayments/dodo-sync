@@ -16,7 +16,7 @@ Seamlessly sync your Dodo Payments data with your own database.
 
 ## Database Support
 
-We currently support **MongoDB**, **PostgreSQL**, **MySQL**, and **ClickHouse**.
+We currently support **MongoDB**, **PostgreSQL**, **MySQL** (≥ 8.0.20), and **ClickHouse**.
 
 We are actively working on expanding support for:
 - **Databases**: Snowflake and others.
@@ -228,13 +228,13 @@ syncDodoPayments.start();
 >
 > **PostgreSQL**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created in the database specified in your connection URI. Data is stored as JSONB.
 >
-> **MySQL**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created in the database specified in your connection URI. Data is stored as JSON.
+> **MySQL**: Requires **MySQL ≥ 8.0.20** (uses modern row alias syntax for upserts, fully compatible with MySQL 9.0+). Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created in the database specified in your connection URI. Data is stored as JSON.
 >
 > **ClickHouse**: Tables (`Subscriptions`, `Payments`, `Licenses`, `Customers`) will be created using the ReplacingMergeTree engine. When querying, use the `FINAL` keyword to ensure deduplicated results.
 
 ---
 
-## Breaking Changes (v1.0.0)
+## Breaking Changes
 
 > [!WARNING]
 > If you are upgrading from `v0.x` to `v1.x` and above:
@@ -245,3 +245,7 @@ syncDodoPayments.start();
 > 2. **MongoDB Licence Primary Key Standardized**:
 >    Licence documents in MongoDB are now keyed by their license `id` (`_id: licence.id`), matching PostgreSQL, MySQL, and ClickHouse (previously, they were keyed by `subscription_id`).
 >    * **Upgrade Action**: If upgrading from `v0.x`, drop your existing `Licence` collection (or clear the old `dodopayments_sync` database). Re-running the sync will cleanly re-populate all records with the standardized primary key format.
+>
+> 3. **MySQL Version Requirement**:
+>    * **Requirement**: Minimum **MySQL version 8.0.20** is required for the sync engine to function correctly.
+>    * **Reason**: The sync ngine uses an updated method in its UPSERT operations, which is not supported in older MySQL versions and has been deprecated in newer MySQL versions.

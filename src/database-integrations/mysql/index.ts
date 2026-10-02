@@ -56,8 +56,8 @@ async function AddSubscriptionsMySQL(subscriptions: DodoPayments.Subscriptions.S
     const placeholders = subscriptions.map(() => '(?, ?)').join(', ');
     const query = `
         INSERT INTO Subscriptions (id, data)
-        VALUES ${placeholders}
-        ON DUPLICATE KEY UPDATE data = VALUES(data);
+        VALUES ${placeholders} AS new_data
+        ON DUPLICATE KEY UPDATE data = new_data.data;
     `;
     const values: any[] = [];
     for (const sub of subscriptions) {
@@ -83,8 +83,8 @@ async function AddPaymentsMySQL(payments: DodoPayments.Payments.PaymentListRespo
     const placeholders = payments.map(() => '(?, ?)').join(', ');
     const query = `
         INSERT INTO Payments (id, data)
-        VALUES ${placeholders}
-        ON DUPLICATE KEY UPDATE data = VALUES(data);
+        VALUES ${placeholders} AS new_data
+        ON DUPLICATE KEY UPDATE data = new_data.data;
     `;
     const values: any[] = [];
     for (const payment of payments) {
@@ -110,8 +110,8 @@ async function AddLicencesMySQL(licences: DodoPayments.LicenseKeys.LicenseKey[])
     const placeholders = licences.map(() => '(?, ?)').join(', ');
     const query = `
         INSERT INTO Licenses (id, data)
-        VALUES ${placeholders}
-        ON DUPLICATE KEY UPDATE data = VALUES(data);
+        VALUES ${placeholders} AS new_data
+        ON DUPLICATE KEY UPDATE data = new_data.data;
     `;
     const values: any[] = [];
     for (const licence of licences) {
@@ -137,8 +137,8 @@ async function AddCustomersMySQL(customers: DodoPayments.Customers.Customer[]) {
     const placeholders = customers.map(() => '(?, ?)').join(', ');
     const query = `
         INSERT INTO Customers (id, data)
-        VALUES ${placeholders}
-        ON DUPLICATE KEY UPDATE data = VALUES(data);
+        VALUES ${placeholders} AS new_data
+        ON DUPLICATE KEY UPDATE data = new_data.data;
     `;
     const values: any[] = [];
     for (const customer of customers) {
